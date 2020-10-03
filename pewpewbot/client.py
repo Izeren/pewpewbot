@@ -1,9 +1,10 @@
 import aiohttp
+import json
 import logging
 from dataclasses import dataclass
-from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
-from pewpewbot.errors import AuthenticationError, wrap_errors
 
+from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
+from pewpewbot.errors import AuthenticationError, wrap_errors, ValidationError
 
 DEFAULT_ENDPOINT = 'http://classic.dzzzr.ru'
 DEFAULT_CITY = 'moscow'
@@ -58,7 +59,12 @@ class Client:
             raise TypeError(
                 'The Client object should be used as an asynchronous context manager ("async with Client(...)")')
         async with self._client.request(method, url, **kwargs) as resp:
-            return await resp.json(encoding='utf-8', content_type='text/plain')
+            body = await resp.read()
+            pos = body.find(b'{')
+            if pos == -1:
+                raise ValidationError(body)
+            body = body[pos:].decode('utf-8')
+            return json.loads(body)
 
     @wrap_errors
     async def log_in(self, login, password):
