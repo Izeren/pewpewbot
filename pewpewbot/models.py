@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List
+from typing import Any, List, Union
 
 from marshmallow import Schema, fields, post_load, missing
 
@@ -17,46 +17,27 @@ def _rename(data, **new_names):
 
 
 class EnumField(fields.Field):
-    default_error_messages = {
-        'by_name': 'Invalid enum member {input}',
-        'by_value': 'Invalid enum value {input}',
-        'must_be_string': 'Enum name must be string'
-    }
-
-    def __init__(self, enum, by_value=False, *args, **kwargs):
+    def __init__(self, enum, strict=True, *args, **kwargs):
         self.enum = enum
-        self.by_value = by_value
+        self.strict = strict
         super(EnumField, self).__init__(*args, **kwargs)
 
     def _serialize(self, value, attr, obj, **kwargs):
         if value is None:
             return None
-        elif self.by_value:
-            return value.value
-        else:
-            return value.name
+        if not self.strict and not isinstance(value, self.enum):
+            return value
+        return value.value
 
     def _deserialize(self, value, attr, data, **kwargs):
         if value is None:
             return None
-        elif self.by_value:
-            return self._deserialize_by_value(value)
-        else:
-            return self._deserialize_by_name(value)
-
-    def _deserialize_by_value(self, value):
         try:
             return self.enum(value)
         except ValueError:
-            self.fail('by_value', input=value)
-
-    def _deserialize_by_name(self, value):
-        if not isinstance(value, str):
-            self.fail('must_be_string', input=value)
-        try:
-            return getattr(self.enum, value)
-        except AttributeError:
-            self.fail('by_name', input=value)
+            if not self.strict:
+                return value
+            self.fail(f'Enum {self.enum} has no such value', input=value)
 
 
 class IntOrMissing(fields.Int):
@@ -81,15 +62,28 @@ class StatusError(Enum):
 
 
 class CodeVerdict(Enum):
+    POSSIBLY_REPEAT = 0
     REPEAT = 7
-    ACCEPTED = 8
+    COMPOUND_ACCEPTED = 8
+    ACCEPTED_NEXT_LEVEL = 9
     REJECTED = 11
+    BONUS_REPEAT = 35
+    BONUS_ACCEPTED = 36
+    ACCEPTED = 55
 
 
 @dataclass
 class CodeResult:
-    verdict: CodeVerdict
+    verdict: Union[CodeVerdict, int]
     comment: str
+
+
+@dataclass
+class Spoiler:
+    spoilerText: str
+    spoilerSolved: str
+    spoilerPenalty: int
+    spoilerNumber: int
 
 
 @dataclass
@@ -112,7 +106,7 @@ class LevelStatus:
     koline: str = None
     question: str = None
     locationComment: str = None
-    spoilers: List[str] = None
+    spoilers: List[Spoiler] = None
     koinspoiler: bool = None
     timeOnLevel: str = None
     tm: int = None
@@ -172,6 +166,17 @@ class Status:
             error='errNo', error_text='errText'))
 
 
+class SpoilerSchema(Schema):
+    spoilerText = fields.Str()
+    spoilerSolved = fields.Str()
+    spoilerPenalty = fields.Int()
+    spoilerNumber = fields.Int()
+
+    @post_load
+    def to_object(self, data, **kwargs):
+        return Spoiler(**data)
+
+
 class LevelStatusSchema(Schema):
     isSabotage = fields.Bool()
     levelNumber = IntOrMissing()
@@ -191,7 +196,7 @@ class LevelStatusSchema(Schema):
     koline = fields.Str(required=True)
     question = fields.Str(required=True)
     locationComment = fields.Str(required=True)
-    spoilers = fields.List(fields.Str, required=True)
+    spoilers = fields.List(fields.Nested(SpoilerSchema), required=True)
     koinspoiler = fields.Bool(required=True)
     timeOnLevel = fields.Str(required=True)
     tm = IntOrMissing(required=True)
@@ -223,7 +228,7 @@ class StatusSchema(Schema):
     level = fields.Nested(LevelStatusSchema)
     bonusLevels = BonusLevelsField()
     messages = fields.List(fields.Str)
-    errNo = EnumField(StatusError, required=True, by_value=True)
+    errNo = EnumField(StatusError, strict=False, required=True)
     errText = fields.Str()
 
     gameStartOnTime = fields.Str()
@@ -257,7 +262,7 @@ class TokenSchema(Schema):
 
 
 class CodeSchema(Schema):
-    errNo = EnumField(CodeVerdict, required=True, by_value=True)
+    errNo = EnumField(CodeVerdict, strict=False, required=True)
     errText = fields.Str()
 
     @post_load
