@@ -3,11 +3,11 @@ from functools import partial
 
 from aiogram import Bot, Dispatcher, executor
 
-from .client import Client
-from .command_patterns import ALL_COMMANDS
-from .manager import Manager
-from .settings import API_TOKEN
-from .State import State
+from pewpewbot.client import Client
+from pewpewbot.command_patterns import ALL_COMMANDS
+from pewpewbot.manager import Manager
+from pewpewbot.settings import API_TOKEN
+from pewpewbot.State import State
 
 
 # Configure logging

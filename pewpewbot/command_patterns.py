@@ -1,6 +1,6 @@
-import commands_processing
-from TgCommand import TgCommand
-from patterns import STANDARD_COORDS_PATTERN, STANDARD_CODE_PATTERN
+from pewpewbot import commands_processing
+from pewpewbot.TgCommand import TgCommand
+from pewpewbot.patterns import STANDARD_COORDS_PATTERN, STANDARD_CODE_PATTERN
 
 
 ################################################################################

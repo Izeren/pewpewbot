@@ -1,5 +1,4 @@
-import patterns
-from utils import Modes
+from pewpewbot import patterns
 
 
 class State(object):

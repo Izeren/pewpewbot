@@ -5,7 +5,7 @@ import aiohttp
 from aiohttp import ClientError as AiohttpClientError
 from marshmallow.exceptions import ValidationError
 
-from .models import AuthenticationError, CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
+from pewpewbot.models import AuthenticationError, CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
 
 
 DEFAULT_ENDPOINT = 'http://classic.dzzzr.ru'
