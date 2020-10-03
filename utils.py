@@ -1,9 +1,8 @@
-from enum import Enum
-
-from aiogram import types
-
 import command_patterns
+from enum import Enum
+from aiogram import types
 from TgCommand import TgCommand
+
 
 class Modes(Enum):
     ENABLED = "on"

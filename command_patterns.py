@@ -57,6 +57,11 @@ PARSE_COMMAND = TgCommand('parse', '''
 парсится ли сейчас движок
 ''', commands_processing.process_parse, True)
 
+MAPS_COMMAND = TgCommand('maps', '''
+    /maps - включает парсинг координат из чата. Когда парсинг включен, бот будет присылать локацию в ответ на координаты,
+/maps on, /maps off для переключения режима. /status, чтобы узнать, парсится ли сейчас движок
+''', commands_processing.process_maps, True)
+
 PATTERN_COMMAND = TgCommand('pattern', '''
     /pattern - регулярное выражение для поиска кода. 
 Чтобы установить стандартное выражение используйте команду "/pattern standard".
@@ -82,10 +87,10 @@ TYPE_COMMAND = TgCommand('type', '''
     /type - ввод кодов. /type on, /type off -- переключают режим работы. Если режим ввода кодов включен,
 бот будет пытаться искать паттерны с кодом в каждом сообщении (по умолчанию ищутся стандартные дозорные коды,
 состоящие из букв d, r и цифр, но шаблон можно поменять через команду /pattern 
-''', commands_processing.dummy, False)
+''', commands_processing.process_type, False)
 
 SET_COMMAND = TgCommand('set', '''
-    /set key value, позволяет выставить значение переменной в key value формате, используется например для переключение
-режима ввода координат (локация в чат): /set maps on, /set maps off
+    /set key value, позволяет выставить значение переменной в key value формате, работает аналогично link, но позволяет
+указывать настраиваемые ключи
 ''', commands_processing.dummy, False)
 

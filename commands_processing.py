@@ -68,3 +68,21 @@ def process_parse(message: types.Message, bot: DozorBot, **kwargs):
     else:
         bot.state.set_parse(mode)
         return message.reply("Парсинг {}".format("включен" if mode else "выключен"))
+
+def process_maps(message: types.Message, bot: DozorBot, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    mode = utils.parse_new_mode(text)
+    if mode is None:
+        return message.reply("Неверный режим использования, используйте 'on' или 'off'")
+    else:
+        bot.state.set_maps(mode)
+        return message.reply("Парсинг координат из чата {}".format("включен" if mode else "выключен"))
+
+def process_type(message: types.Message, bot: DozorBot, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    mode = utils.parse_new_mode(text)
+    if mode is None:
+        return message.reply("Неверный режим использования, используйте 'on' или 'off'")
+    else:
+        bot.state.set_type(mode)
+        return message.reply("Автоматический парсинг кодов {}".format("включен" if mode else "выключен"))

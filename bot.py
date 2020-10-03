@@ -49,6 +49,10 @@ async def on_get_chat_id(message: types.Message):
 async def on_parse(message: types.Message):
     await command_patterns.PARSE_COMMAND.apply_and_get_awaitable(message, bot)
 
+@dp.message_handler(commands=[command_patterns.MAPS_COMMAND.name])
+async def on_parse(message: types.Message):
+    await command_patterns.MAPS_COMMAND.apply_and_get_awaitable(message, bot)
+
 @dp.message_handler(commands=[command_patterns.PATTERN_COMMAND.name])
 async def on_pattern(message: types.Message):
     await command_patterns.PATTERN_COMMAND.apply_and_get_awaitable(message, bot)
