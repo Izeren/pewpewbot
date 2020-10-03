@@ -68,3 +68,6 @@ class State(object):
 
     def reset_pattern(self):
         self.code_pattern = patterns.STANDARD_CODE_PATTERN
+
+    def get_pattern(self):
+        return self.code_pattern

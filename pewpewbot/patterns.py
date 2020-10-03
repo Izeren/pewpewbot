@@ -5,6 +5,8 @@
 STANDARD_COORDS_PATTERN = r'(\d{2}[\.,]\d{3,})'
 # Default pattern for parsing standard dozor code from telegram chat
 STANDARD_CODE_PATTERN = r'\d*[dr]\d*[dr]\d*'
+# Pattern for command with forced code
+FORCED_CODE_PATTERN = r'^/ '
 
 ################################################################################
 # Current block is for direct bot commands patterns

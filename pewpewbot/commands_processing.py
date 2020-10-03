@@ -126,7 +126,10 @@ async def login(message: types.Message, manager: Manager, **kwargs):
 
 
 async def process_code(message: types.Message, manager: Manager, **kwargs):
-    text = message.text.strip()
+    text = message.text
+    if text.startswith('/'):
+        text = text[1:]
+    text = text.strip()
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
     try:
@@ -162,13 +165,20 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
     try:
         game_status = await manager.http_client.status()
         current_level_id = game_status.current_level.levelNumber
+        if not manager.state.game_status:
+            return _process_next_level(game_status, manager)
         if manager.state.game_status.current_level.levelNumber != current_level_id:
             utils.notify_all_channels(bot, manager, "Выдан новый уровень")
             await bot.send_message(manager.state.main_channel_id, "Выдан новый уровень")
-            _process_next_level(game_status)
+            return _process_next_level(game_status, manager)
         else:
-            _update_current_level_info(game_status)
+            return _update_current_level_info(game_status)
     except ClientError:
         await bot.send_message(manager.state.code_channel_id, "Ошибка при обновлении статуса уровня")
     except Exception:
         await bot.send_message(manager.state.code_channel_id, "Бот упал при обновлении статуса уровня")
+
+
+async def process_unknown(message: types.Message, manager: Manager, **kwargs):
+    if re.fullmatch(manager.state.get_pattern(), message.text):
+        await process_code(message, manager)
