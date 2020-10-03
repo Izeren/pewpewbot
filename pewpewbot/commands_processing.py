@@ -1,6 +1,6 @@
 import re
 
-from aiogram import types
+from aiogram import types, Bot
 
 from pewpewmanager import utils
 from pewpewmanager.client import ClientError
@@ -114,3 +114,27 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
         await message.reply("Ошибка соединения с сервером")
     finally:
         await message.reply("Ошибка, бот не смог")
+
+
+def _process_next_level(game_status):
+    pass
+
+
+def _update_current_level_info(game_status):
+    pass
+
+
+async def update_level_status(bot: Bot, manager: Manager, **kwargs):
+    try:
+        game_status = manager.http_client.status()
+        current_level_id = game_status.current_level.level_number
+        if manager.state.game_status.current_level.levelNumber != current_level_id:
+            utils.notify_all_channels(bot, manager, "Выдан новый уровень")
+            await bot.send_message(manager.state.main_channel_id, "Выдан новый уровень")
+            _process_next_level(game_status)
+        else:
+            _update_current_level_info(game_status)
+    except ClientError:
+        await bot.send_message(manager.state.code_channel_id, "Ошибка при обновлении статуса уровня")
+    finally:
+        await bot.send_message(manager.state.code_channel_id, "Бот упал при обновлении статуса уровня")

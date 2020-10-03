@@ -10,7 +10,10 @@ class State(object):
             tip='',
             link='',
             other={},
-            code_pattern=patterns.STANDARD_CODE_PATTERN
+            code_pattern=patterns.STANDARD_CODE_PATTERN,
+            main_channel_id=None,
+            code_channel_id=None,
+            game_status=None
     ):
         self.code_pattern = code_pattern
         self.parse_on = parse_on
@@ -19,6 +22,9 @@ class State(object):
         self.other = other
         self.tip = tip
         self.link = link
+        self.main_channel_id = main_channel_id
+        self.code_channel_id = code_channel_id
+        self.game_status = game_status
 
     def set_parse(self, mode):
         self.parse_on = mode
