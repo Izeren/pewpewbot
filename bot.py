@@ -1,11 +1,13 @@
 import logging
 
-from aiogram import Dispatcher, executor, types
+from aiogram import Dispatcher, executor, types, Bot
 from aiogram.dispatcher import filters
 
 import command_patterns
 import utils
-from DozorBot import DozorBot
+from State import State
+from client import Client
+from manager import Manager
 from settings import API_TOKEN
 
 # Configure logging
@@ -13,8 +15,8 @@ logging.basicConfig(level=logging.INFO)
 
 
 # Initialize bot and dispatcher
-bot = DozorBot(token=API_TOKEN)
-dp = Dispatcher(bot)
+manager = Manager(State(), Client())
+dp = Dispatcher(Bot(token=API_TOKEN))
 
 
 @dp.message_handler(commands=['start', 'help'])
