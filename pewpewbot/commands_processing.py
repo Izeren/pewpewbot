@@ -1,10 +1,8 @@
 import re
-
 from aiogram import types, Bot
-
-from pewpewmanager import utils
-from pewpewmanager.client import ClientError
-from pewpewmanager.manager import Manager
+from pewpewbot import utils
+from pewpewbot.errors import ClientError
+from pewpewbot.manager import Manager
 
 
 async def dummy(message: types.Message, manager: Manager, **kwargs):
@@ -126,8 +124,8 @@ def _update_current_level_info(game_status):
 
 async def update_level_status(bot: Bot, manager: Manager, **kwargs):
     try:
-        game_status = manager.http_client.status()
-        current_level_id = game_status.current_level.level_number
+        game_status = await manager.http_client.status()
+        current_level_id = game_status.current_level.levelNumber
         if manager.state.game_status.current_level.levelNumber != current_level_id:
             utils.notify_all_channels(bot, manager, "Выдан новый уровень")
             await bot.send_message(manager.state.main_channel_id, "Выдан новый уровень")
