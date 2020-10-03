@@ -1,5 +1,7 @@
 import re
 from aiogram import types, Bot
+
+from models import CodeVerdict
 from pewpewbot import utils
 from pewpewbot.errors import ClientError
 from pewpewbot.manager import Manager
@@ -125,19 +127,45 @@ async def login(message: types.Message, manager: Manager, **kwargs):
         await message.reply("Ошибка, бот не смог")
 
 
+POSSIBLY_REPEAT = 0
+REPEAT = 7
+COMPOUND_ACCEPTED = 8
+ACCEPTED_NEXT_LEVEL = 9
+REJECTED = 11
+BONUS_REPEAT = 35
+BONUS_ACCEPTED = 36
+ACCEPTED = 55
+
+
 async def process_code(message: types.Message, manager: Manager, **kwargs):
     text = message.text
-    if text.startswith('/'):
+    if text.startswith('.'):
         text = text[1:]
     text = text.strip()
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
     try:
         code_verdict = await manager.http_client.post_code(text)
-        if code_verdict.SUCCESS:
-            await message.reply("Код принят")
+        if isinstance(code_verdict, CodeVerdict):
+            if code_verdict.ACCEPTED:
+                return await message.reply("Код принят")
+            elif code_verdict.ACCEPTED_NEXT_LEVEL:
+                await message.reply("Взят последний код на уровне")
+                return _process_next_level(await manager.http_client.status(), manager)
+            elif code_verdict.BONUS_ACCEPTED:
+                return await message.reply("Принят бонусный код")
+            elif code_verdict.BONUS_REPEAT:
+                return await message.reply("Повторно введен бонусный код")
+            elif code_verdict.REPEAT:
+                return await message.reply("Повторно введенный код")
+            elif code_verdict.COMPOUND_ACCEPTED:
+                return await message.reply("Принят составной код")
+            elif code_verdict.REJECTED:
+                return await message.reply("Неверный код")
+            elif code_verdict.POSSIBLY_REPEAT:
+                return await message.reply("Повторно введен код к спойлеру")
         else:
-            await message.reply("Неверный или повторно введенный код")
+            await message.reply("Неопознанный вердикт сервера")
     except ClientError:
         await message.reply("Ошибка соединения с сервером")
     except Exception:
@@ -180,5 +208,5 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
 
 
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
-    if re.fullmatch(manager.state.get_pattern(), message.text):
+    if re.fullmatch(manager.state.get_pattern(), message.text) or message.text.startswith('.'):
         await process_code(message, manager)
