@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import aio_timers
 from functools import partial
 from aiogram import Bot, Dispatcher, executor
 
@@ -11,7 +10,7 @@ from pewpewbot.manager import Manager
 from pewpewbot.settings import API_TOKEN
 from pewpewbot.State import State
 
-# Every 10 seconds bot will ping server
+# Every 30 seconds bot will ping server
 TIMEOUT = 30
 
 
@@ -25,6 +24,12 @@ def main():
     # Initialize bot and manager
     bot = Bot(token=API_TOKEN, loop=loop)
     manager = Manager(State(), Client(), logging.getLogger(Manager.__name__))
+    try:
+        from settings import LOGIN
+        from settings import PASSWD
+        await manager.http_client.log_in(LOGIN, PASSWD)
+    except Exception as e:
+        logging.getLogger(__name__).error("Failed to login")
 
     # Use hack for repeated coro every TIMEOUT seconds
     def repeat(coro, loop):
@@ -54,28 +59,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-#
-# DELAY = 7200
-#
-# bot = Bot(token='BOT TOKEN HERE')
-# dp = Dispatcher(bot)
-#
-# @dp.message_handler(commands=['start', 'help'])
-# async def send_welcome(message: types.Message):
-#     await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.")
-#
-#
-# async def update_price():
-#     ...
-#
-#
-# def repeat(coro, loop):
-#     asyncio.ensure_future(coro(), loop=loop)
-#     loop.call_later(DELAY, repeat, coro, loop)
-#
-#
-# if __name__ == '__main__':
-#     loop = asyncio.get_event_loop()
-#     loop.call_later(DELAY, repeat, update_price, loop)
-#     executor.start_polling(dp, loop=loop)
