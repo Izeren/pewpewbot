@@ -121,7 +121,7 @@ async def login(message: types.Message, manager: Manager, **kwargs):
         await manager.http_client.log_in(login, passwd)
     except ClientError:
         await message.reply("Ошибка соединения с сервером")
-    except Exception:
+    except Exception as e:
         await message.reply("Ошибка, бот не смог")
 
 
@@ -141,8 +141,17 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
         await message.reply("Ошибка, бот не смог")
 
 
-def _process_next_level(game_status):
-    pass
+async def update_level(message: types.Message, manager: Manager, **kwargs):
+    try:
+        _process_next_level(await manager.http_client.status(), manager)
+    except ClientError:
+        await message.reply("Ошибка соединения с сервером")
+    except Exception:
+        await message.reply("Ошибка, бот не смог")
+
+
+def _process_next_level(status, manager: Manager):
+    manager.logger.info("New game status from site {} ".format(status))
 
 
 def _update_current_level_info(game_status):

@@ -98,6 +98,10 @@ SET_COMMAND = TgCommand('set', '''
 указывать настраиваемые ключи
 ''', commands_processing.dummy, False)
 
+ST_COMMAND = TgCommand('st', '''
+Чтобы зафорсить апдейт статуса бота (пока нет таймера)
+''', commands_processing.update_level, True)
+
 
 ALL_COMMANDS = [
     START_COMMAND,
@@ -118,4 +122,6 @@ ALL_COMMANDS = [
     STATUS_COMMAND,
     TEST_ERROR_COMMAND,
     TYPE_COMMAND,
-    SET_COMMAND]
+    SET_COMMAND,
+    ST_COMMAND,
+]

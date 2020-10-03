@@ -1,8 +1,10 @@
+import asyncio
 import logging
+import aio_timers
 from functools import partial
-
 from aiogram import Bot, Dispatcher, executor
 
+import commands_processing
 from pewpewbot.client import Client
 from pewpewbot.command_patterns import ALL_COMMANDS
 from pewpewbot.manager import Manager
@@ -11,12 +13,11 @@ from pewpewbot.State import State
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, filename='pewpew.log')
 
 # Initialize bot and dispatcher
-manager = Manager(State(), Client())
+manager = Manager(State(), Client(), logging.getLogger(Manager.__name__))
 dispatcher = Dispatcher(Bot(token=API_TOKEN))
-
 
 for command in ALL_COMMANDS:
     if not command.enabled:
