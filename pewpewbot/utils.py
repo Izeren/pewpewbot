@@ -1,7 +1,8 @@
 from pewpewbot import command_patterns
 from enum import Enum
-from aiogram import types
+from aiogram import types, Bot
 from pewpewbot.TgCommand import TgCommand
+from pewpewbot.manager import Manager
 
 
 class Modes(Enum):
@@ -25,3 +26,10 @@ def parse_new_mode(mode):
         return False
     else:
         return None
+
+
+def notify_all_channels(bot: Bot, manager: Manager, message: types.message):
+    if manager.state.main_channel_id:
+        bot.send_message(manager.state.main_channel_id, message)
+    if manager.state.code_channel_id:
+        bot.send_message(manager.state.code_channel_id, message)
