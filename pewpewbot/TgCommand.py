@@ -10,6 +10,6 @@ class TgCommand(object):
 
     def apply_and_get_awaitable(self, message, manager, **kwargs):
         command_name = message.text.split(' ', maxsplit=1)[0].lstrip('/')
-        assert command_name in self.names, (command_name, self.names)
+        # assert command_name in self.names, (command_name, self.names)
         kwargs['command_name'] = command_name
         return self.awaitable_action_method(message, manager, **kwargs)

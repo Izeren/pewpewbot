@@ -55,9 +55,9 @@ class Client:
         await self._client.__aexit__(exc_type, exc_val, exc_tb)
 
     async def _request(self, method, url, **kwargs):
-        if not self._entered:
-            raise TypeError(
-                'The Client object should be used as an asynchronous context manager ("async with Client(...)")')
+        # if not self._entered:
+        #     raise TypeError(
+        #         'The Client object should be used as an asynchronous context manager ("async with Client(...)")')
         async with self._client.request(method, url, **kwargs) as resp:
             body = await resp.read()
             pos = body.find(b'{')
@@ -71,7 +71,7 @@ class Client:
         resp = await self._request(
             'get', self._urls.log_in, params=dict(login=login, password=password),
             auth=aiohttp.BasicAuth(login=login, password=password))
-        self.logger.info("Server response on log in request {}", resp)
+        self.logger.info("Server response on log in request {}".format(resp))
         self._token = TokenSchema().load(resp)
 
     @wrap_errors
@@ -80,7 +80,7 @@ class Client:
             'get', self._urls.status, params=dict(
                 s=self.token,
                 api='true'))
-        self.logger.info("Server response on game status request {}", resp)
+        self.logger.info("Server response on game status request {}".format(resp))
         return StatusSchema().load(resp)
 
     @wrap_errors
@@ -90,5 +90,5 @@ class Client:
                 s=self.token,
                 action='entcod',
                 cod=code))
-        self.logger.info("Server response on post code request {}", resp)
+        self.logger.info("Server response on post code request {}".format(resp))
         return CodeSchema().load(resp)

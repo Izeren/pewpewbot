@@ -14,7 +14,7 @@ START_COMMAND = TgCommand(['start', 'help'], '''
 AUTH_COMMAND = TgCommand('auth', '''
     /auth - авторизация через логин пароль. Использовать так: "/auth login password". 
 Используйте этот метод авторизации, если у вас есть отдельный аккаунта для бота.
-''', commands_processing.dummy)
+''', commands_processing.login, True)
 
 PARSE_COORDS_COMMAND = TgCommand('', '''
     Посылает в чат сообщение в формате location, если видит сообщение с координатами(пример: 55.786064, 37.595543), 
@@ -24,7 +24,7 @@ PARSE_COORDS_COMMAND = TgCommand('', '''
 PARSE_CODE_COMMAND = TgCommand('', '''
     Пытается распарсить сообщение как код для движка согласно шаблону. По-умолчанию парсятся стандартные коды, 
 содержащие цифры и буквы d/r (по подной букве каждого вида), шаблон можно поменять при помощи комманды /pattern
-''', commands_processing.dummy, True, STANDARD_CODE_PATTERN)
+''', commands_processing.process_code, True, STANDARD_CODE_PATTERN)
 
 COOKIE_COMMAND = TgCommand('cookie', '''
     /cookie - установка авторизационной куки dozorSiteSession. Использовать так: "/cookie KTerByfGopF5dSgFjkl07x8v". 
@@ -82,7 +82,7 @@ SLEEP_SECONDS_COMMAND = TgCommand('sleep_seconds', '''
 STATUS_COMMAND = TgCommand('status', '''
     /status - общая информация о подключении к движку. 
 Используйте ее, чтобы понять, авторизованы ли вы и установлен ли пин.
-''', commands_processing.dummy, False)
+''', commands_processing.get_bot_status, True)
 
 TEST_ERROR_COMMAND = TgCommand('test_error', '''
 ''', commands_processing.dummy, False)
@@ -91,12 +91,16 @@ TYPE_COMMAND = TgCommand('type', '''
     /type - ввод кодов. /type on, /type off -- переключают режим работы. Если режим ввода кодов включен,
 бот будет пытаться искать паттерны с кодом в каждом сообщении (по умолчанию ищутся стандартные дозорные коды,
 состоящие из букв d, r и цифр, но шаблон можно поменять через команду /pattern 
-''', commands_processing.process_type, False)
+''', commands_processing.process_type, True)
 
 SET_COMMAND = TgCommand('set', '''
     /set key value, позволяет выставить значение переменной в key value формате, работает аналогично link, но позволяет
 указывать настраиваемые ключи
 ''', commands_processing.dummy, False)
+
+ST_COMMAND = TgCommand('st', '''
+Чтобы зафорсить апдейт статуса бота (пока нет таймера)
+''', commands_processing.update_level, True)
 
 
 ALL_COMMANDS = [
@@ -118,4 +122,6 @@ ALL_COMMANDS = [
     STATUS_COMMAND,
     TEST_ERROR_COMMAND,
     TYPE_COMMAND,
-    SET_COMMAND]
+    SET_COMMAND,
+    ST_COMMAND,
+]

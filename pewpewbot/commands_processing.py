@@ -95,7 +95,34 @@ async def process_type(message: types.Message, manager: Manager, **kwargs):
         await message.reply("Неверный режим использования, используйте 'on' или 'off'")
     else:
         manager.state.set_type(mode)
-        await message.reply("Автоматический парсинг кодов {}".format("включен" if mode else "выключен"))
+        await message.reply("Автоматический парсинг кодов {}".format(utils.get_text_mode_status(mode)))
+
+
+async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
+    text = '''Режим работы бота:
+--- Парсинг движка {}
+--- Автоматический ввод кодов {}
+--- Парсинг координат с локацией {}
+'''
+    formatted = text.format(
+        utils.get_text_mode_status(manager.state.parse_on),
+        utils.get_text_mode_status(manager.state.type_on),
+        utils.get_text_mode_status(manager.state.maps_on)
+    )
+    await message.reply(formatted)
+
+
+async def login(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    login, passwd = text.split(maxsplit=1)
+    login = login.strip()
+    passwd = passwd.strip()
+    try:
+        await manager.http_client.log_in(login, passwd)
+    except ClientError:
+        await message.reply("Ошибка соединения с сервером")
+    except Exception as e:
+        await message.reply("Ошибка, бот не смог")
 
 
 async def process_code(message: types.Message, manager: Manager, **kwargs):
@@ -103,19 +130,28 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
     try:
-        code_verdict = await manager.http_client.post_code()
+        code_verdict = await manager.http_client.post_code(text)
         if code_verdict.SUCCESS:
             await message.reply("Код принят")
         else:
             await message.reply("Неверный или повторно введенный код")
     except ClientError:
         await message.reply("Ошибка соединения с сервером")
-    finally:
+    except Exception:
         await message.reply("Ошибка, бот не смог")
 
 
-def _process_next_level(game_status):
-    pass
+async def update_level(message: types.Message, manager: Manager, **kwargs):
+    try:
+        _process_next_level(await manager.http_client.status(), manager)
+    except ClientError:
+        await message.reply("Ошибка соединения с сервером")
+    except Exception:
+        await message.reply("Ошибка, бот не смог")
+
+
+def _process_next_level(status, manager: Manager):
+    manager.logger.info("New game status from site {} ".format(status))
 
 
 def _update_current_level_info(game_status):
@@ -134,5 +170,5 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
             _update_current_level_info(game_status)
     except ClientError:
         await bot.send_message(manager.state.code_channel_id, "Ошибка при обновлении статуса уровня")
-    finally:
+    except Exception:
         await bot.send_message(manager.state.code_channel_id, "Бот упал при обновлении статуса уровня")
