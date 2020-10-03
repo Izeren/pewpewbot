@@ -126,7 +126,7 @@ async def login(message: types.Message, manager: Manager, **kwargs):
 
 
 async def process_code(message: types.Message, manager: Manager, **kwargs):
-    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    text = message.text.strip()
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
     try:
