@@ -46,6 +46,7 @@ def main():
         else:
             kwargs = dict(commands=command.names)
         dispatcher.register_message_handler(partial(command.apply_and_get_awaitable, manager=manager), **kwargs)
+    dispatcher.register_message_handler(partial(commands_processing.process_unknown, manager=manager), **{})
 
     # Start polling
     executor.start_polling(dispatcher, skip_updates=True)

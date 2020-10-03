@@ -102,6 +102,9 @@ ST_COMMAND = TgCommand('st', '''
 Чтобы зафорсить апдейт статуса бота (пока нет таймера)
 ''', commands_processing.update_level, True)
 
+FORCE_CODE_COMMAND = TgCommand('', '''
+    Пробивает код, без проверки регулярного выражения 
+''', commands_processing.process_code, True, pattern=r'/ ')
 
 ALL_COMMANDS = [
     START_COMMAND,
@@ -124,4 +127,5 @@ ALL_COMMANDS = [
     TYPE_COMMAND,
     SET_COMMAND,
     ST_COMMAND,
+    FORCE_CODE_COMMAND,
 ]
