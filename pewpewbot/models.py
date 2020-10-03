@@ -81,8 +81,15 @@ class StatusError(Enum):
 
 
 class CodeVerdict(Enum):
-    SUCCESS = 1
-    FAILURE = 2
+    REPEAT = 7
+    ACCEPTED = 8
+    REJECTED = 11
+
+
+@dataclass
+class CodeResult:
+    verdict: CodeVerdict
+    comment: str
 
 
 @dataclass
@@ -250,8 +257,9 @@ class TokenSchema(Schema):
 
 
 class CodeSchema(Schema):
-    err = EnumField(CodeVerdict, required=True, by_value=True)
+    errNo = EnumField(CodeVerdict, required=True, by_value=True)
+    errText = fields.Str()
 
     @post_load
-    def parse_error(self, data, **kwargs) -> CodeVerdict:
-        return data['err']
+    def parse_error(self, data, **kwargs) -> CodeResult:
+        return CodeResult(verdict=data['errNo'], comment=data['errText'])

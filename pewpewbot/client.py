@@ -3,6 +3,8 @@ import json
 import logging
 from dataclasses import dataclass
 
+from marshmallow import EXCLUDE
+
 from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
 from pewpewbot.errors import AuthenticationError, wrap_errors, ValidationError
 
@@ -91,4 +93,4 @@ class Client:
                 action='entcod',
                 cod=code))
         self.logger.info("Server response on post code request {}".format(resp))
-        return CodeSchema().load(resp)
+        return CodeSchema(partial=True, unknown=EXCLUDE).load(resp)
