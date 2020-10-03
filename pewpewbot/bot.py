@@ -27,7 +27,7 @@ def main():
     try:
         from settings import LOGIN
         from settings import PASSWD
-        await manager.http_client.log_in(LOGIN, PASSWD)
+        asyncio.ensure_future(manager.http_client.log_in(LOGIN, PASSWD), loop=loop)
     except Exception as e:
         logging.getLogger(__name__).error("Failed to login")
 
