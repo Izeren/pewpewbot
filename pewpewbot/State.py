@@ -10,7 +10,7 @@ class State(object):
             tip='',
             link='',
             other={},
-            code_pattern = patterns.STANDARD_CODE_PATTERN
+            code_pattern=patterns.STANDARD_CODE_PATTERN
     ):
         self.code_pattern = code_pattern
         self.parse_on = parse_on

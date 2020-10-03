@@ -1,11 +1,9 @@
 from dataclasses import dataclass
-from functools import wraps
 
 import aiohttp
-from aiohttp import ClientError as AiohttpClientError
-from marshmallow.exceptions import ValidationError
 
-from pewpewbot.models import AuthenticationError, CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
+from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
+from pewpewbot.errors import AuthenticationError, wrap_errors
 
 
 DEFAULT_ENDPOINT = 'http://classic.dzzzr.ru'
@@ -28,20 +26,6 @@ class ClientConfig:
 
 DEFAULT_URLS = Urls()
 DEFAULT_CONFIG = ClientConfig(total_timeout=20, max_concurrent_connections=5)
-
-
-class ClientError(Exception):
-    pass
-
-
-def _wrap_errors(wrapped):
-    @wraps(wrapped)
-    async def wrapper(*args, **kwargs):
-        try:
-            return wrapped(*args, **kwargs)
-        except (AuthenticationError, AiohttpClientError, ValidationError) as err:
-            raise ClientError('API client failed') from err
-    return wrapper
 
 
 class Client:
@@ -71,17 +55,17 @@ class Client:
 
     async def _request(self, method, url, **kwargs):
         if not self._entered:
-            raise ValueError(
+            raise TypeError(
                 'The Client object should be used as an asynchronous context manager ("async with Client(...)")')
         async with self._client.request(method, url, **kwargs) as resp:
             return await resp.json(encoding='utf-8')
 
-    @_wrap_errors
+    @wrap_errors
     async def log_in(self, login, password):
         resp = await self._request('get', self._urls.log_in, params=dict(login=login, password=password))
         self._token = TokenSchema().load(resp)
 
-    @_wrap_errors
+    @wrap_errors
     async def status(self) -> Status:
         resp = await self._request(
             'get', self._urls.status, params=dict(
@@ -89,7 +73,7 @@ class Client:
                 api='true'))
         return StatusSchema().load(resp)
 
-    @_wrap_errors
+    @wrap_errors
     async def post_code(self, code: str) -> CodeVerdict:
         resp = await self._request(
             'post', self._urls.status + '?api=true', data=dict(

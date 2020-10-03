@@ -5,6 +5,8 @@ from typing import Any, List
 from marshmallow import Schema, fields, post_load
 from marshmallow_enum import EnumField
 
+from pewpewbot.errors import AuthenticationError
+
 
 def _rename(data, **new_names):
     new_fields = {}
@@ -13,10 +15,6 @@ def _rename(data, **new_names):
             new_fields[new_name] = data[old_name]
             del data[old_name]
     return {**data, **new_fields}
-
-
-class AuthenticationError(ValueError):
-    pass
 
 
 class StatusError(Enum):
