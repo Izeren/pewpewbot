@@ -7,6 +7,10 @@ from patterns import STANDARD_COORDS_PATTERN, STANDARD_CODE_PATTERN
 # Current block is for direct bot commands patterns
 ################################################################################
 
+START_COMMAND = TgCommand(['start', 'help'], '''
+    /start или /help - вывести справку
+''', commands_processing.help, True)
+
 AUTH_COMMAND = TgCommand('auth', '''
     /auth - авторизация через логин пароль. Использовать так: "/auth login password". 
 Используйте этот метод авторизации, если у вас есть отдельный аккаунта для бота.
@@ -94,3 +98,24 @@ SET_COMMAND = TgCommand('set', '''
 указывать настраиваемые ключи
 ''', commands_processing.dummy, False)
 
+
+ALL_COMMANDS = [
+    START_COMMAND,
+    AUTH_COMMAND,
+    PARSE_COORDS_COMMAND,
+    PARSE_CODE_COMMAND,
+    COOKIE_COMMAND,
+    KO_COMMAND,
+    IMG_COMMAND,
+    LINK_COMMAND,
+    TIP_COMMAND,
+    GET_CHAT_ID_COMMAND,
+    PARSE_COMMAND,
+    MAPS_COMMAND,
+    PATTERN_COMMAND,
+    PIN_COMMAND,
+    SLEEP_SECONDS_COMMAND,
+    STATUS_COMMAND,
+    TEST_ERROR_COMMAND,
+    TYPE_COMMAND,
+    SET_COMMAND]
