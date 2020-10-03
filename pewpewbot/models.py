@@ -112,7 +112,7 @@ class LevelStatusSchema(Schema):
     takeBreak = fields.Bool(required=True)
 
     @post_load
-    def to_object(self, data) -> LevelStatus:
+    def to_object(self, data, **kwargs) -> LevelStatus:
         return LevelStatus.from_api(data)
 
 
@@ -133,7 +133,7 @@ class StatusSchema(Schema):
     errText = fields.Str()
 
     @post_load
-    def to_object(self, data) -> Status:
+    def to_object(self, data, **kwargs) -> Status:
         return Status.from_api(data)
 
 
@@ -141,10 +141,10 @@ class TokenSchema(Schema):
     error = fields.Str(required=True)
     code = fields.Int(required=True)
     userName = fields.Str()
-
     userToken = fields.Str()
+
     @post_load
-    def extract_token(self, data) -> str:
+    def extract_token(self, data, **kwargs) -> str:
         if data['code'] != 2:
             raise AuthenticationError(data)
         return data['userToken']
@@ -154,5 +154,5 @@ class CodeSchema(Schema):
     err = EnumField(CodeVerdict, required=True, by_value=True)
 
     @post_load
-    def parse_error(self, data) -> CodeVerdict:
+    def parse_error(self, data, **kwargs) -> CodeVerdict:
         return data['err']

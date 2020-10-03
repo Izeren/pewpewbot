@@ -58,11 +58,13 @@ class Client:
             raise TypeError(
                 'The Client object should be used as an asynchronous context manager ("async with Client(...)")')
         async with self._client.request(method, url, **kwargs) as resp:
-            return await resp.json(encoding='utf-8')
+            return await resp.json(encoding='utf-8', content_type='text/plain')
 
     @wrap_errors
     async def log_in(self, login, password):
-        resp = await self._request('get', self._urls.log_in, params=dict(login=login, password=password))
+        resp = await self._request(
+            'get', self._urls.log_in, params=dict(login=login, password=password),
+            auth=aiohttp.BasicAuth(login=login, password=password))
         self._token = TokenSchema().load(resp)
 
     @wrap_errors
