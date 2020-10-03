@@ -14,7 +14,7 @@ START_COMMAND = TgCommand(['start', 'help'], '''
 AUTH_COMMAND = TgCommand('auth', '''
     /auth - авторизация через логин пароль. Использовать так: "/auth login password". 
 Используйте этот метод авторизации, если у вас есть отдельный аккаунта для бота.
-''', commands_processing.dummy)
+''', commands_processing.login, True)
 
 PARSE_COORDS_COMMAND = TgCommand('', '''
     Посылает в чат сообщение в формате location, если видит сообщение с координатами(пример: 55.786064, 37.595543), 

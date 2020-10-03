@@ -112,6 +112,19 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
     await message.reply(formatted)
 
 
+async def login(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    login, passwd = text.split(maxsplit=1)
+    login = login.strip()
+    passwd = passwd.strip()
+    try:
+        await manager.http_client.log_in(login, passwd)
+    except ClientError:
+        await message.reply("Ошибка соединения с сервером")
+    except Exception:
+        await message.reply("Ошибка, бот не смог")
+
+
 async def process_code(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     # TODO: make all awaits in the end
