@@ -1,7 +1,6 @@
-from dataclasses import dataclass
-
 import aiohttp
-
+import logging
+from dataclasses import dataclass
 from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
 from pewpewbot.errors import AuthenticationError, wrap_errors
 
@@ -37,6 +36,7 @@ class Client:
             raise_for_status=True)
         self._entered = False
         self._token = None
+        self.logger = logging.getLogger(Client.__name__)
 
     @property
     def token(self):
@@ -63,6 +63,7 @@ class Client:
     @wrap_errors
     async def log_in(self, login, password):
         resp = await self._request('get', self._urls.log_in, params=dict(login=login, password=password))
+        self.logger.info("Server response on log in request {}", resp)
         self._token = TokenSchema().load(resp)
 
     @wrap_errors
@@ -71,6 +72,7 @@ class Client:
             'get', self._urls.status, params=dict(
                 s=self.token,
                 api='true'))
+        self.logger.info("Server response on game status request {}", resp)
         return StatusSchema().load(resp)
 
     @wrap_errors
@@ -80,4 +82,5 @@ class Client:
                 s=self.token,
                 action='entcod',
                 cod=code))
+        self.logger.info("Server response on post code request {}", resp)
         return CodeSchema().load(resp)
