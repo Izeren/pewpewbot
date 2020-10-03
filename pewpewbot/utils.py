@@ -33,3 +33,7 @@ def notify_all_channels(bot: Bot, manager: Manager, message: types.message):
         bot.send_message(manager.state.main_channel_id, message)
     if manager.state.code_channel_id:
         bot.send_message(manager.state.code_channel_id, message)
+
+
+def get_text_mode_status(mode):
+    return "включен" if mode else "выключен"
