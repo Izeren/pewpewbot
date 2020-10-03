@@ -74,7 +74,7 @@ class Client:
             'get', self._urls.log_in, params=dict(login=login, password=password),
             auth=aiohttp.BasicAuth(login=login, password=password))
         self.logger.info("Server response on log in request {}".format(resp))
-        self._token = TokenSchema().load(resp)
+        self._token = TokenSchema(partial=True, unknown=EXCLUDE).load(resp)
 
     @wrap_errors
     async def status(self) -> Status:
@@ -83,7 +83,7 @@ class Client:
                 s=self.token,
                 api='true'))
         self.logger.info("Server response on game status request {}".format(resp))
-        return StatusSchema().load(resp)
+        return StatusSchema(partial=True, unknown=EXCLUDE).load(resp)
 
     @wrap_errors
     async def post_code(self, code: str) -> CodeVerdict:
