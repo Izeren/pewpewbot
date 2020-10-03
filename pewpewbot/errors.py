@@ -24,7 +24,7 @@ def wrap_errors(wrapped):
     @wraps(wrapped)
     async def wrapper(*args, **kwargs):
         try:
-            return wrapped(*args, **kwargs)
+            return await wrapped(*args, **kwargs)
         except AiohttpClientError as err:
             raise ConnectionError() from err
         except MarshmallowValidationError as err:

@@ -32,8 +32,8 @@ class Client:
     def __init__(self, urls: Urls = DEFAULT_URLS, config: ClientConfig = DEFAULT_CONFIG):
         self._urls = urls
         self._client = aiohttp.ClientSession(
-            connector=aiohttp.BaseConnector(limit=config.max_concurrent_connections),
-            timeout=config.total_timeout,
+            connector=aiohttp.TCPConnector(limit=config.max_concurrent_connections),
+            timeout=aiohttp.ClientTimeout(total=config.total_timeout),
             raise_for_status=True)
         self._entered = False
         self._token = None
