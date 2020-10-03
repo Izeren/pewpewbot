@@ -55,7 +55,7 @@ GET_CHAT_ID_COMMAND = TgCommand('get_chat_id', '''
 PARSE_COMMAND = TgCommand('parse', '''
     /parse - парсинг движка дозора, /parse on, /parse off для переключения режима. /status, чтобы узнать,
 парсится ли сейчас движок
-''', commands_processing.dummy, True)
+''', commands_processing.process_parse, True)
 
 PATTERN_COMMAND = TgCommand('pattern', '''
     /pattern - регулярное выражение для поиска кода. 

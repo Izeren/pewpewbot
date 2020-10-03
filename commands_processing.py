@@ -59,3 +59,12 @@ def process_pattern(message: types.Message, bot: DozorBot, **kwargs):
             return message.reply("Шаблон кода: {}".format(bot.state.code_pattern))
         else:
             return message.reply("Шаблон кода: стандартный")
+
+def process_parse(message: types.Message, bot: DozorBot, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    mode = utils.parse_new_mode(text)
+    if mode is None:
+        return message.reply("Неверный режим использования, используйте 'on' или 'off'")
+    else:
+        bot.state.set_parse(mode)
+        return message.reply("Парсинг {}".format("включен" if mode else "выключен"))

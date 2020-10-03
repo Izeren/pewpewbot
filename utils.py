@@ -14,3 +14,11 @@ def build_help():
 
 def trim_command_name(message : types.Message, command_name):
     return message.text[len(command_name)+2:]
+
+def parse_new_mode(mode):
+    if mode == Modes.ENABLED.value:
+        return True
+    elif mode == Modes.DISABLED.value:
+        return False
+    else:
+        return None

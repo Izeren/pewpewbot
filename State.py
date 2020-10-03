@@ -21,23 +21,14 @@ class State(object):
         self.tip = tip
         self.link = link
 
-    def set_parse(self, value):
-        if value == Modes.ENABLED:
-            self.parse_on = True
-        elif value == Modes.DISABLED:
-            self.parse_on = False
+    def set_parse(self, mode):
+        self.parse_on = mode
 
-    def set_type(self, value):
-        if value == Modes.ENABLED:
-            self.type_on = True
-        elif value == Modes.DISABLED:
-            self.type_on = False
+    def set_type(self, mode):
+        self.type_on = mode
 
-    def set_maps(self, value):
-        if value == Modes.ENABLED:
-            self.maps_on = True
-        elif value == Modes.DISABLED:
-            self.maps_on = False
+    def set_maps(self, mode):
+        self.maps_on = mode
 
     def get_other(self, name):
         if name in self.other:
