@@ -1,19 +1,21 @@
 import logging
 from functools import partial
 
-from aiogram import Dispatcher, executor
+from aiogram import Bot, Dispatcher, executor
 
+from .client import Client
 from .command_patterns import ALL_COMMANDS
-from .DozorBot import DozorBot
+from .manager import Manager
 from .settings import API_TOKEN
+from .State import State
 
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Initialize bot and dispatcher
-bot = DozorBot(token=API_TOKEN)
-dispatcher = Dispatcher(bot)
+manager = Manager(State(), Client())
+dispatcher = Dispatcher(Bot(token=API_TOKEN))
 
 
 for command in ALL_COMMANDS:
@@ -23,7 +25,7 @@ for command in ALL_COMMANDS:
         kwargs = dict(regexp=command.pattern)
     else:
         kwargs = dict(commands=command.names)
-    dispatcher.register_message_handler(partial(command.apply_and_get_awaitable, bot=bot), **kwargs)
+    dispatcher.register_message_handler(partial(command.apply_and_get_awaitable, manager=manager), **kwargs)
 
 
 if __name__ == '__main__':

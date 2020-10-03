@@ -2,25 +2,26 @@ import re
 
 from aiogram import types
 
-from .DozorBot import DozorBot
 from . import utils
+from .client import ClientError
+from .manager import Manager
 
 
-async def dummy(message: types.Message, bot: DozorBot, **kwargs):
+async def dummy(message: types.Message, bot: Manager, **kwargs):
     await message.reply("Вы пытаетесь использовать команду {}, но у нее еще нет реализации"
                          .format(kwargs['command_name']))
 
 
-async def help(message: types.Message, bot: DozorBot, **kwargs):
+async def help(message: types.Message, bot: Manager, **kwargs):
     await message.reply(utils.build_help())
 
 
-async def send_ko(message : types.Message, bot: DozorBot, **kwargs):
+async def send_ko(message : types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     await message.reply("Вы пытаетесь ввести код:" + text)
 
 
-async def process_link(message: types.Message, bot: DozorBot, **kwargs):
+async def process_link(message: types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     if text:
         bot.state.set_link(text)
@@ -33,7 +34,7 @@ async def process_link(message: types.Message, bot: DozorBot, **kwargs):
             await message.reply("Настройки ссылки не найдено")
 
 
-async def process_tip(message: types.Message, bot: DozorBot, **kwargs):
+async def process_tip(message: types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     if text.startswith('clean'):
         bot.state.reset_tip()
@@ -49,7 +50,7 @@ async def process_tip(message: types.Message, bot: DozorBot, **kwargs):
             await message.reply("Нет запиненной подсказки")
 
 
-async def process_pattern(message: types.Message, bot: DozorBot, **kwargs):
+async def process_pattern(message: types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     # 'standar' is for stability to parse both standart and standard
     if 'standar' in text:
@@ -69,7 +70,7 @@ async def process_pattern(message: types.Message, bot: DozorBot, **kwargs):
             await message.reply("Шаблон кода: стандартный")
 
 
-async def process_parse(message: types.Message, bot: DozorBot, **kwargs):
+async def process_parse(message: types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     mode = utils.parse_new_mode(text)
     if mode is None:
@@ -79,7 +80,7 @@ async def process_parse(message: types.Message, bot: DozorBot, **kwargs):
         await message.reply("Парсинг {}".format("включен" if mode else "выключен"))
 
 
-async def process_maps(message: types.Message, bot: DozorBot, **kwargs):
+async def process_maps(message: types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     mode = utils.parse_new_mode(text)
     if mode is None:
@@ -89,7 +90,7 @@ async def process_maps(message: types.Message, bot: DozorBot, **kwargs):
         await message.reply("Парсинг координат из чата {}".format("включен" if mode else "выключен"))
 
 
-async def process_type(message: types.Message, bot: DozorBot, **kwargs):
+async def process_type(message: types.Message, bot: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     mode = utils.parse_new_mode(text)
     if mode is None:
@@ -97,3 +98,35 @@ async def process_type(message: types.Message, bot: DozorBot, **kwargs):
     else:
         bot.state.set_type(mode)
         await message.reply("Автоматический парсинг кодов {}".format("включен" if mode else "выключен"))
+
+
+async def process_code(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    # TODO: make all awaits in the end
+    await message.reply("Пытаюсь пробить код: {}".format(text))
+    try:
+        code_verdict = await manager.http_client.post_code()
+        if code_verdict.SUCCESS:
+            await message.reply("Код принят")
+        else:
+            await message.reply("Неверный или повторно введенный код")
+    except ClientError:
+        await message.reply("Ошибка соединения с сервером")
+    finally:
+        await message.reply("Ошибка, бот не смог")
+
+
+async def process_code(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    # TODO: make all awaits in the end
+    await message.reply("Пытаюсь пробить код: {}".format(text))
+    try:
+        code_verdict = await manager.http_client.post_code()
+        if code_verdict.SUCCESS:
+            await message.reply("Код принят")
+        else:
+            await message.reply("Неверный или повторно введенный код")
+    except ClientError:
+        await message.reply("Ошибка соединения с сервером")
+    finally:
+        await message.reply("Ошибка, бот не смог")

@@ -8,8 +8,8 @@ class TgCommand(object):
         self.awaitable_action_method = awaitable_action_method
         self.enabled = enabled
 
-    def apply_and_get_awaitable(self, message, bot, **kwargs):
+    def apply_and_get_awaitable(self, message, manager, **kwargs):
         command_name = message.text.split(' ', maxsplit=1)[0].lstrip('/')
         assert command_name in self.names, (command_name, self.names)
         kwargs['command_name'] = command_name
-        return self.awaitable_action_method(message, bot, **kwargs)
+        return self.awaitable_action_method(message, manager, **kwargs)
