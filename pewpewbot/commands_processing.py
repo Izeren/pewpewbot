@@ -180,4 +180,5 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
 
 
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
-    await message.reply("Бот не смог распарсить команду: {}".format(message.text))
+    if re.fullmatch(manager.state.get_pattern(), message.text):
+        await process_code(message, manager)

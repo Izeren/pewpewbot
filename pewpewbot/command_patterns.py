@@ -21,11 +21,6 @@ PARSE_COORDS_COMMAND = TgCommand('', '''
 если включен режим парсинга координат. Управляется через /set maps on, /set maps of
 ''', commands_processing.dummy, True, STANDARD_COORDS_PATTERN)
 
-PARSE_CODE_COMMAND = TgCommand('', '''
-    Пытается распарсить сообщение как код для движка согласно шаблону. По-умолчанию парсятся стандартные коды, 
-содержащие цифры и буквы d/r (по подной букве каждого вида), шаблон можно поменять при помощи комманды /pattern
-''', commands_processing.process_code, True, STANDARD_CODE_PATTERN)
-
 COOKIE_COMMAND = TgCommand('cookie', '''
     /cookie - установка авторизационной куки dozorSiteSession. Использовать так: "/cookie KTerByfGopF5dSgFjkl07x8v". 
 Используйте этот метод авторизации, если у вас нет отдельного аккаунта для бота и 
@@ -69,12 +64,7 @@ MAPS_COMMAND = TgCommand('maps', '''
 PATTERN_COMMAND = TgCommand('pattern', '''
     /pattern - регулярное выражение для поиска кода. 
 Чтобы установить стандартное выражение используйте команду "/pattern standard".
-''', commands_processing.process_pattern, False)
-
-PIN_COMMAND = TgCommand('pin', '''
-    /pin - устанавливает пин для доступа в игру (если для игры не установлен пин, ничего делать не нужно)
-Использовать так: "/pin moscow_captain:123456", где moscow_captain и 123456 - данные, выдаваемые организаторами.
-''', commands_processing.dummy, False)
+''', commands_processing.process_pattern, True)
 
 SLEEP_SECONDS_COMMAND = TgCommand('sleep_seconds', '''
 ''', commands_processing.dummy, False)
@@ -96,7 +86,7 @@ TYPE_COMMAND = TgCommand('type', '''
 SET_COMMAND = TgCommand('set', '''
     /set key value, позволяет выставить значение переменной в key value формате, работает аналогично link, но позволяет
 указывать настраиваемые ключи
-''', commands_processing.dummy, False)
+''', commands_processing.dummy, True)
 
 ST_COMMAND = TgCommand('st', '''
 Чтобы зафорсить апдейт статуса бота (пока нет таймера)
@@ -110,7 +100,6 @@ ALL_COMMANDS = [
     START_COMMAND,
     AUTH_COMMAND,
     PARSE_COORDS_COMMAND,
-    PARSE_CODE_COMMAND,
     COOKIE_COMMAND,
     KO_COMMAND,
     IMG_COMMAND,
@@ -120,7 +109,6 @@ ALL_COMMANDS = [
     PARSE_COMMAND,
     MAPS_COMMAND,
     PATTERN_COMMAND,
-    PIN_COMMAND,
     SLEEP_SECONDS_COMMAND,
     STATUS_COMMAND,
     TEST_ERROR_COMMAND,
