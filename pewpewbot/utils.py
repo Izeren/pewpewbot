@@ -28,11 +28,16 @@ def parse_new_mode(mode):
         return None
 
 
-def notify_all_channels(bot: Bot, manager: Manager, message: types.message):
+async def notify_all_channels(manager: Manager, message: types.message):
     if 'chat_id' in manager.state.other:
-        bot.send_message(manager.state.other['chat_id'], message)
+        await manager.bot.send_message(manager.state.other['chat_id'], message)
     if 'channel_id' in manager.state.other:
-        bot.send_message(manager.state.other['channel_id'], message)
+        await manager.bot.send_message(manager.state.other['channel_id'], message)
+
+
+async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
+    if 'chat_id' in manager.state.other:
+        await bot.send_message(manager.state.other['chat_id'], message, parse_mode='Markdown')
 
 
 def get_text_mode_status(mode):

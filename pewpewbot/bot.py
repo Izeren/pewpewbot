@@ -28,7 +28,7 @@ def main():
 
     # Initialize bot and manager
     bot = Bot(token=API_TOKEN, loop=loop)
-    manager = Manager(State(), Client(), logging.getLogger(Manager.__name__))
+    manager = Manager(State(), Client(), bot, logging.getLogger(Manager.__name__))
     try:
         from settings import LOGIN
         from settings import PASSWD
