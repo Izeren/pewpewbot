@@ -62,6 +62,7 @@ class BonusLevelsField(fields.List):
 
 class StatusError(Enum):
     SUCCESS = 0
+    NO_LEVEL = 15
 
 
 class CodeVerdict(Enum):
