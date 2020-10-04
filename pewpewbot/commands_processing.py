@@ -1,10 +1,15 @@
+import datetime
+import logging
 import re
 from aiogram import types, Bot
 
-from models import CodeVerdict
+import code_utils
+from models import CodeVerdict, Status, Koline
 from pewpewbot import utils
 from pewpewbot.errors import ClientError
 from pewpewbot.manager import Manager
+
+logger = logging.getLogger(__name__)
 
 
 async def dummy(message: types.Message, manager: Manager, **kwargs):
@@ -18,7 +23,12 @@ async def help(message: types.Message, manager: Manager, **kwargs):
 
 async def send_ko(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
-    await message.reply("Вы пытаетесь ввести код:" + text)
+    if not manager.state.koline:
+        status = await manager.http_client.status()
+        koline = Koline.from_string(status.current_level.koline)
+    else:
+        koline = manager.state.koline
+    await message.reply(koline)
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -127,45 +137,23 @@ async def login(message: types.Message, manager: Manager, **kwargs):
         await message.reply("Ошибка, бот не смог")
 
 
-POSSIBLY_REPEAT = 0
-REPEAT = 7
-COMPOUND_ACCEPTED = 8
-ACCEPTED_NEXT_LEVEL = 9
-REJECTED = 11
-BONUS_REPEAT = 35
-BONUS_ACCEPTED = 36
-ACCEPTED = 55
-
-
 async def process_code(message: types.Message, manager: Manager, **kwargs):
     text = message.text
     if text.startswith('.'):
         text = text[1:]
-    text = text.strip()
+    text = text.lower().strip()
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
     try:
-        code_verdict = await manager.http_client.post_code(text)
-        if isinstance(code_verdict, CodeVerdict):
-            if code_verdict.ACCEPTED:
-                return await message.reply("Код принят")
-            elif code_verdict.ACCEPTED_NEXT_LEVEL:
-                await message.reply("Взят последний код на уровне")
-                return _process_next_level(await manager.http_client.status(), manager)
-            elif code_verdict.BONUS_ACCEPTED:
-                return await message.reply("Принят бонусный код")
-            elif code_verdict.BONUS_REPEAT:
-                return await message.reply("Повторно введен бонусный код")
-            elif code_verdict.REPEAT:
-                return await message.reply("Повторно введенный код")
-            elif code_verdict.COMPOUND_ACCEPTED:
-                return await message.reply("Принят составной код")
-            elif code_verdict.REJECTED:
-                return await message.reply("Неверный код")
-            elif code_verdict.POSSIBLY_REPEAT:
-                return await message.reply("Повторно введен код к спойлеру")
+        code_result = await manager.http_client.post_code(text)
+        if isinstance(code_result.verdict, int):
+            return await message.reply(code_result.comment)
         else:
-            await message.reply("Неопознанный вердикт сервера")
+            if not code_result.verdict.value in code_utils.GOOD_VERDICTS:
+                return await message.reply(code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value])
+            else:
+                return await _update_current_level_info_on_code(
+                    code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
     except ClientError:
         await message.reply("Ошибка соединения с сервером")
     except Exception:
@@ -174,7 +162,9 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
 
 async def update_level(message: types.Message, manager: Manager, **kwargs):
     try:
-        _process_next_level(await manager.http_client.status(), manager)
+        status = await manager.http_client.status()
+        await message.reply(status)
+        _process_next_level(status, manager)
     except ClientError:
         await message.reply("Ошибка соединения с сервером")
     except Exception:
@@ -185,8 +175,32 @@ def _process_next_level(status, manager: Manager):
     manager.logger.info("New game status from site {} ".format(status))
 
 
-def _update_current_level_info(game_status):
-    pass
+def _update_current_level_info(game_status: Status, manager: Manager):
+    manager.state.game_status = game_status
+
+
+async def _update_current_level_info_on_code(verdict: str, message: types.Message, manager: Manager):
+    new_status = await manager.http_client.status()
+    koline = manager.state.koline
+    new_koline = Koline.from_string(new_status.current_level.koline)
+    if not koline:
+        logger.error("Koline has not been initialized on level")
+        manager.state.koline = new_koline
+        manager.state.game_status = new_status
+        return
+    if len(koline.sectors) != len(new_koline.sectors):
+        logger.error("Number of sectors has been changed, probably level has been upped")
+        return
+    for old_sector, new_sector in zip(koline.sectors, new_koline.sectors):
+        if len(old_sector.codes) != len(new_sector.codes):
+            logger.error("Number of codes for sector: {} is broken".format(new_sector.name))
+            return
+        for old_code, new_code in zip(old_sector.codes, new_sector.codes):
+            if not old_code.taken and new_code.taken:
+                await message.reply("{} таймер: {}".format(verdict,
+                                                           datetime.timedelta(seconds=new_status.current_level.tm)))
+    manager.state.koline = new_koline
+    manager.state.game_status = new_status
 
 
 async def update_level_status(bot: Bot, manager: Manager, **kwargs):
@@ -197,16 +211,29 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
             return _process_next_level(game_status, manager)
         if manager.state.game_status.current_level.levelNumber != current_level_id:
             utils.notify_all_channels(bot, manager, "Выдан новый уровень")
-            await bot.send_message(manager.state.main_channel_id, "Выдан новый уровень")
             return _process_next_level(game_status, manager)
         else:
-            return _update_current_level_info(game_status)
+            return _update_current_level_info(game_status, manager)
     except ClientError:
-        await bot.send_message(manager.state.code_channel_id, "Ошибка при обновлении статуса уровня")
+        if 'chat_id' in manager.state.other:
+            await bot.send_message(manager.state.other['chat_id'], "Ошибка при обновлении статуса уровня")
     except Exception:
-        await bot.send_message(manager.state.code_channel_id, "Бот упал при обновлении статуса уровня")
+        if 'chat_id' in manager.state.other:
+            await bot.send_message(manager.state.other['chat_id'], "Бот упал при обновлении статуса уровня")
 
 
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
-    if re.fullmatch(manager.state.get_pattern(), message.text) or message.text.startswith('.'):
+    text = message.text.lower()
+    if re.fullmatch(manager.state.get_pattern(), text) or text.startswith('.'):
         await process_code(message, manager)
+
+
+async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs):
+    await message.reply("chat id: {}".format(message.chat.id))
+
+
+async def set_state_key_value(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    key, value = text.split()
+    manager.state.other[key] = value
+    await message.reply("Для переменной {} установлено значение: {}".format(key, value))

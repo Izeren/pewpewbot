@@ -29,10 +29,10 @@ def parse_new_mode(mode):
 
 
 def notify_all_channels(bot: Bot, manager: Manager, message: types.message):
-    if manager.state.main_channel_id:
-        bot.send_message(manager.state.main_channel_id, message)
-    if manager.state.code_channel_id:
-        bot.send_message(manager.state.code_channel_id, message)
+    if 'chat_id' in manager.state.other:
+        bot.send_message(manager.state.other['chat_id'], message)
+    if 'channel_id' in manager.state.other:
+        bot.send_message(manager.state.other['channel_id'], message)
 
 
 def get_text_mode_status(mode):

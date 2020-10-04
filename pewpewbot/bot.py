@@ -16,7 +16,12 @@ TIMEOUT = 30
 
 def main():
     # Configure logging
-    logging.basicConfig(level=logging.INFO, filename='pewpew.log')
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S',
+        filename='pewpew.log'
+    )
 
     # Create loop will be used in bot
     loop = asyncio.get_event_loop()

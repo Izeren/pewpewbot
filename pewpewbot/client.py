@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from marshmallow import EXCLUDE
 
-from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema
+from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema, CodeResult
 from pewpewbot.errors import AuthenticationError, wrap_errors, ValidationError
 
 DEFAULT_ENDPOINT = 'http://classic.dzzzr.ru'
@@ -86,7 +86,7 @@ class Client:
         return StatusSchema(partial=True, unknown=EXCLUDE).load(resp)
 
     @wrap_errors
-    async def post_code(self, code: str) -> CodeVerdict:
+    async def post_code(self, code: str) -> CodeResult:
         resp = await self._request(
             'post', self._urls.status + '?api=true', data=dict(
                 s=self.token,

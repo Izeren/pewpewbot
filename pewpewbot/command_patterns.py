@@ -30,7 +30,7 @@ COOKIE_COMMAND = TgCommand('cookie', '''
 KO_COMMAND = TgCommand('ko', '''
     /ko - прислать актуальную табличку с КО в чат. По умолчанию, присылает только невзятые коды. Если есть запиненная
 подсказка, то будет приписывать каждому невзятому коду текст подсказки
-''', commands_processing.send_ko, False)
+''', commands_processing.send_ko, True)
 
 IMG_COMMAND = TgCommand('img', '''
     /img - прислать актуальную изображение с КО в чат.
@@ -49,7 +49,9 @@ TIP_COMMAND = TgCommand('tip', '''
 ''', commands_processing.process_tip, True)
 
 GET_CHAT_ID_COMMAND = TgCommand('get_chat_id', '''
-''', commands_processing.dummy, True)
+    /get_chat_id - возвращает айди чата из которого был запрос к боту, нужно, чтобы пинить чаты, в которые бот будет
+делать рассылку об уровнях
+''', commands_processing.process_get_chat_id, True)
 
 PARSE_COMMAND = TgCommand('parse', '''
     /parse - парсинг движка дозора, /parse on, /parse off для переключения режима. /status, чтобы узнать,
@@ -86,10 +88,10 @@ TYPE_COMMAND = TgCommand('type', '''
 SET_COMMAND = TgCommand('set', '''
     /set key value, позволяет выставить значение переменной в key value формате, работает аналогично link, но позволяет
 указывать настраиваемые ключи
-''', commands_processing.dummy, True)
+''', commands_processing.set_state_key_value, True)
 
 ST_COMMAND = TgCommand('st', '''
-Чтобы зафорсить апдейт статуса бота (пока нет таймера)
+Чтобы зафорсить апдейт статуса бота (для дебага, с выводом в чат)
 ''', commands_processing.update_level, True)
 
 FORCE_CODE_COMMAND = TgCommand('', '''

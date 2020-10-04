@@ -1,9 +1,12 @@
+import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, List, Union
 
 from marshmallow import Schema, fields, post_load, missing
 
+import patterns
 from pewpewbot.errors import AuthenticationError
 
 
@@ -213,6 +216,54 @@ class LevelStatusSchema(Schema):
     @post_load
     def to_object(self, data, **kwargs) -> LevelStatus:
         return LevelStatus.from_api(data)
+
+
+@dataclass
+class ParsedCode:
+    label: int
+    ko: str
+    taken: bool
+    is_bonus: bool
+
+    @staticmethod
+    def from_string(label, raw_code, is_bonus=False):
+        raw_code = raw_code.strip()
+        taken = raw_code.startswith('r')
+        if taken:
+            ko = raw_code[1:]
+        else:
+            ko = raw_code
+        return ParsedCode(label, ko, taken, is_bonus)
+
+
+@dataclass
+class Sector:
+    name: str
+    codes: List[ParsedCode]
+
+    @staticmethod
+    def from_string(raw_sector):
+        raw_sector = raw_sector.strip()
+        name, codes = raw_sector.rsplit(':', maxsplit=1)
+        name = name.strip()
+        codes = codes.strip()
+        if len(name) == 0:
+            name = "Сектор без названия"
+        is_bonus = "бонус" in name.lower()
+        return Sector(name=name, codes=list(ParsedCode.from_string(label, code, is_bonus)
+                                            for label, code in enumerate(codes.split(','))))
+
+
+@dataclass
+class Koline:
+    sectors: List[Sector]
+
+    @staticmethod
+    def from_string(koline: str):
+        koline = koline.replace('null', 'N').strip()
+        koline = koline.replace('<span style=\'color:red\'>', 'r')
+        koline = koline.replace('</span>', '')
+        return Koline(sectors=list(Sector.from_string(raw_sector) for raw_sector in koline.split('<br>') if raw_sector))
 
 
 class StatusSchema(Schema):

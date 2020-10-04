@@ -1,4 +1,4 @@
-from models import Status
+from models import Status, Koline
 from pewpewbot import patterns
 
 
@@ -12,9 +12,8 @@ class State(object):
             link='',
             other={},
             code_pattern=patterns.STANDARD_CODE_PATTERN,
-            main_channel_id: int = None,
-            code_channel_id: int = None,
-            game_status: Status = None
+            game_status: Status = None,
+            koline: Koline = None
     ):
         self.code_pattern = code_pattern
         self.parse_on = parse_on
@@ -23,9 +22,8 @@ class State(object):
         self.other = other
         self.tip = tip
         self.link = link
-        self.main_channel_id = main_channel_id
-        self.code_channel_id = code_channel_id
         self.game_status = game_status
+        self.koline = koline
 
     def set_parse(self, mode):
         self.parse_on = mode
