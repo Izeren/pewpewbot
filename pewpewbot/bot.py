@@ -4,14 +4,16 @@ from functools import partial
 from aiogram import Bot, Dispatcher, executor
 
 import commands_processing
+from pewpewbot import utils
 from pewpewbot.client import Client
-from pewpewbot.command_patterns import ALL_COMMANDS
 from pewpewbot.manager import Manager
 from pewpewbot.settings import API_TOKEN
 from pewpewbot.State import State
 
 # Every 30 seconds bot will ping server
 TIMEOUT = 30
+# List of TgCommand which are enabled in command_patterns
+ACTIVE_COMMANDS = utils.get_all_active_commands()
 
 
 def main():
@@ -48,9 +50,7 @@ def main():
     dispatcher = Dispatcher(bot)
 
     # Register commands in dispatcher
-    for command in ALL_COMMANDS:
-        if not command.enabled:
-            continue
+    for command in ACTIVE_COMMANDS:
         if command.pattern is not None:
             kwargs = dict(regexp=command.pattern)
         else:

@@ -4,6 +4,7 @@ import re
 from aiogram import types, Bot
 
 import code_utils
+import patterns
 import views
 from models import Status, Koline, CodeVerdict
 from pewpewbot import utils
@@ -14,6 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 async def dummy(message: types.Message, manager: Manager, **kwargs):
+    await message.reply("Вы пытаетесь использовать команду {}, но у нее еще нет реализации"
+                        .format(kwargs['command_name']))
+
+
+async def parse_coords_to_location(message: types.Message, manager: Manager, **kwargs):
     await message.reply("Вы пытаетесь использовать команду {}, но у нее еще нет реализации"
                         .format(kwargs['command_name']))
 
@@ -242,10 +248,27 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
             await bot.send_message(manager.state.other['chat_id'], "Бот упал при обновлении статуса уровня")
 
 
+async def try_process_coords(message: types.Message, manager: Manager, text: str):
+    coords = re.findall(patterns.STANDARD_COORDS_PATTERN, text)
+    for idx in range(len(coords) // 2):
+        s_lat = coords[2 * idx]
+        s_long = coords[2 * idx + 1]
+        try:
+            f_lat = float(s_lat)
+            f_long = float(s_long)
+            await manager.bot.send_location(message.chat.id, f_lat, f_long,
+                                            reply_to_message_id=message.message_id)
+        except Exception as e:
+            await message.reply("Не удалось распарсить координаты из: '{}', '{}'"
+                                .format(s_lat, s_long))
+
+
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
     text = message.text.lower()
     if re.fullmatch(manager.state.get_pattern(), text) or text.startswith('.'):
         await process_code(message, manager)
+    elif manager.state.maps_on:
+        await try_process_coords(message, manager, text)
 
 
 async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs):

@@ -16,11 +16,6 @@ AUTH_COMMAND = TgCommand('auth', '''
 Используйте этот метод авторизации, если у вас есть отдельный аккаунта для бота.
 ''', commands_processing.login, True)
 
-PARSE_COORDS_COMMAND = TgCommand('', '''
-    Посылает в чат сообщение в формате location, если видит сообщение с координатами(пример: 55.786064, 37.595543), 
-если включен режим парсинга координат. Управляется через /set maps on, /set maps of
-''', commands_processing.dummy, True, STANDARD_COORDS_PATTERN)
-
 COOKIE_COMMAND = TgCommand('cookie', '''
     /cookie - установка авторизационной куки dozorSiteSession. Использовать так: "/cookie KTerByfGopF5dSgFjkl07x8v". 
 Используйте этот метод авторизации, если у вас нет отдельного аккаунта для бота и 
@@ -97,25 +92,3 @@ ST_COMMAND = TgCommand('st', '''
 FORCE_CODE_COMMAND = TgCommand('', '''
     Пробивает код, без проверки регулярного выражения 
 ''', commands_processing.process_code, True, pattern=r'/ ')
-
-ALL_COMMANDS = [
-    START_COMMAND,
-    AUTH_COMMAND,
-    PARSE_COORDS_COMMAND,
-    COOKIE_COMMAND,
-    KO_COMMAND,
-    IMG_COMMAND,
-    LINK_COMMAND,
-    TIP_COMMAND,
-    GET_CHAT_ID_COMMAND,
-    PARSE_COMMAND,
-    MAPS_COMMAND,
-    PATTERN_COMMAND,
-    SLEEP_SECONDS_COMMAND,
-    STATUS_COMMAND,
-    TEST_ERROR_COMMAND,
-    TYPE_COMMAND,
-    SET_COMMAND,
-    ST_COMMAND,
-    FORCE_CODE_COMMAND,
-]
