@@ -1,6 +1,10 @@
 from models import Status, Koline
 from pewpewbot import patterns
 
+CODE_CHAT_KEY = 'code_chat_id'
+MAIN_CHAT_KEY = 'main_chat_id'
+DEBUG_CHAT_KEY = 'debug_chat_id'
+
 
 class State(object):
     def __init__(

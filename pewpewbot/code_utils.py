@@ -17,3 +17,9 @@ GOOD_VERDICTS = {
     CodeVerdict.BONUS_ACCEPTED.value,
     CodeVerdict.COMPOUND_ACCEPTED.value,
 }
+
+ACCEPTED_VERDICTS = {
+    CodeVerdict.ACCEPTED.value,
+    CodeVerdict.BONUS_ACCEPTED.value,
+    CodeVerdict.COMPOUND_ACCEPTED.value
+}

@@ -3,9 +3,9 @@ LABEL maintainer="Alex <izeren.ml@gmail.com>" \
       description="Dozor aiogram Telegram bot"
 
 RUN apk add --update alpine-sdk && \
-    python -mpip install aiogram
+    python -mpip install aiogram marshmallow python-json-logger decorator
 
-ENV PYTHONPATH "${PYTHONPATH}:/usr/bin/python"
+ENV PYTHONPATH "${PYTHONPATH}:/usr/bin/python:/app"
 
 EXPOSE 4545
 WORKDIR /app

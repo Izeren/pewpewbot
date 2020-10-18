@@ -1,17 +1,43 @@
 import datetime
 import logging
 import re
+import decorator
+
 from aiogram import types, Bot
 
 import code_utils
 import patterns
 import views
+from State import DEBUG_CHAT_KEY
 from models import Status, Koline, CodeVerdict
 from pewpewbot import utils
-from pewpewbot.errors import ClientError
+from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
+logger.propagate = False
+
+
+@decorator.decorator
+async def safe_dzzzr_interation(fn, bot: Bot, manager: Manager, **kwargs):
+    try:
+        return await fn(bot, manager, **kwargs)
+    except AuthenticationError as e:
+        logger.error(e)
+        if DEBUG_CHAT_KEY in manager.state.other:
+            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Ошибка аутентификации в движке дозора")
+    except ConnectionError as e:
+        logger.error(e)
+        if DEBUG_CHAT_KEY in manager.state.other:
+            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Ошибка подключения к движку дозора")
+    except ValidationError as e:
+        logger.error(e)
+        if DEBUG_CHAT_KEY in manager.state.other:
+            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Ошибка валидации ответа")
+    except Exception as e:
+        logger.error(e)
+        if DEBUG_CHAT_KEY in manager.state.other:
+            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Неожиданное исключение в боте")
 
 
 async def dummy(message: types.Message, manager: Manager, **kwargs):
@@ -72,7 +98,7 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
 
 async def process_pattern(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
-    # 'standar' is for stability to parse managerh standart and standard
+    # 'standar' is for stability to parse both standart and standard
     if 'standar' in text:
         manager.state.reset_pattern()
         await message.reply("Установлен стандартный шаблон кода")
@@ -134,57 +160,50 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
     await message.reply(formatted)
 
 
+@safe_dzzzr_interation
 async def login(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     login, passwd = text.split(maxsplit=1)
     login = login.strip()
     passwd = passwd.strip()
-    try:
-        await manager.http_client.log_in(login, passwd)
-    except ClientError:
-        await message.reply("Ошибка соединения с сервером")
-    except Exception as e:
-        await message.reply("Ошибка, бот не смог")
+    await manager.http_client.log_in(login, passwd)
 
 
+@safe_dzzzr_interation
 async def process_code(message: types.Message, manager: Manager, **kwargs):
+    if not manager.state.type_on:
+        return
     text = message.text
     if text.startswith('.') or text.startswith('/'):
         text = text[1:]
     text = text.lower().strip()
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
-    try:
-        code_result = await manager.http_client.post_code(text)
-        if isinstance(code_result.verdict, int):
-            return await message.reply(code_result.comment)
+    code_result = await manager.http_client.post_code(text)
+    if isinstance(code_result.verdict, int):
+        return await message.reply(code_result.comment)
+    else:
+        if code_result.verdict.value in code_utils.ACCEPTED_VERDICTS:
+            await send_ko(message, manager, **kwargs)
+        if code_result.verdict.value not in code_utils.GOOD_VERDICTS:
+            return await message.reply(code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value])
         else:
-            if code_result.verdict.value not in code_utils.GOOD_VERDICTS:
-                return await message.reply(code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value])
-            else:
-                if code_result.verdict.value == CodeVerdict.ACCEPTED_NEXT_LEVEL.value:
-                    return await utils.notify_all_channels(manager, "Взят последний код на уровне")
-                return await _update_current_level_info_on_code(
-                    code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
-    except ClientError:
-        await message.reply("Ошибка соединения с сервером")
-    except Exception:
-        await message.reply("Ошибка, бот не смог")
+            if code_result.verdict.value == CodeVerdict.ACCEPTED_NEXT_LEVEL.value:
+                return await utils.notify_all_channels(manager, "Взят последний код на уровне")
+            return await _update_current_level_info_on_code(
+                code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
 
 
+@safe_dzzzr_interation
 async def update_level(message: types.Message, manager: Manager, **kwargs):
-    try:
-        status = await manager.http_client.status()
-        await message.reply(status)
-        await _process_next_level(status, manager)
-    except ClientError:
-        await message.reply("Ошибка соединения с сервером")
-    except Exception:
-        await message.reply("Ошибка, бот не смог")
+    status = await manager.http_client.status()
+    await message.reply(str(status))
+    await _process_next_level(status, manager)
 
 
-async def _process_next_level(status, manager: Manager):
-    await utils.notify_all_channels(manager, "Выдан новый уровень")
+async def _process_next_level(status, manager: Manager, silent=True):
+    if not silent:
+        await utils.notify_all_channels(manager, "Выдан новый уровень")
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
     manager.state.reset_pattern()
@@ -222,7 +241,7 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
                     "{} таймер: {}, метка: {}, ко: {}".format(
                         verdict,
                         datetime.timedelta(seconds=new_status.current_level.tm),
-                        new_code.label,
+                        new_code.label + 1,
                         new_code.ko
                     )
                 )
@@ -230,22 +249,16 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
     manager.state.game_status = new_status
 
 
+@safe_dzzzr_interation
 async def update_level_status(bot: Bot, manager: Manager, **kwargs):
-    try:
-        game_status = await manager.http_client.status()
-        current_level_id = game_status.current_level.levelNumber
-        if not manager.state.game_status:
-            return await _process_next_level(game_status, manager)
-        if manager.state.game_status.current_level.levelNumber != current_level_id:
-            return await _process_next_level(game_status, manager)
-        else:
-            return _update_current_level_info(game_status, manager)
-    except ClientError:
-        if 'chat_id' in manager.state.other:
-            await bot.send_message(manager.state.other['chat_id'], "Ошибка при обновлении статуса уровня")
-    except Exception:
-        if 'chat_id' in manager.state.other:
-            await bot.send_message(manager.state.other['chat_id'], "Бот упал при обновлении статуса уровня")
+    game_status = await manager.http_client.status()
+    current_level_id = game_status.current_level.levelNumber
+    if not manager.state.game_status:
+        return await _process_next_level(game_status, manager)
+    if manager.state.game_status.current_level.levelNumber != current_level_id:
+        return await _process_next_level(game_status, manager, silent=False)
+    else:
+        return _update_current_level_info(game_status, manager)
 
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):

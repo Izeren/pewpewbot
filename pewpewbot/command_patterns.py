@@ -86,9 +86,9 @@ SET_COMMAND = TgCommand('set', '''
 ''', commands_processing.set_state_key_value, True)
 
 ST_COMMAND = TgCommand('st', '''
-Чтобы зафорсить апдейт статуса бота (для дебага, с выводом в чат)
+    /st позволяет зафорсить апдейт статуса бота (для дебага, с выводом в чат)
 ''', commands_processing.update_level, True)
 
 FORCE_CODE_COMMAND = TgCommand('', '''
-    Пробивает код, без проверки регулярного выражения 
+    Используйте "/ code" или ".code" чтобы пробить код без проверки регулярного выражения 
 ''', commands_processing.process_code, True, pattern=r'/ ')

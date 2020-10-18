@@ -1,13 +1,14 @@
+import os
 import asyncio
 import logging
-from functools import partial
-from aiogram import Bot, Dispatcher, executor
-
 import commands_processing
+from os import path
+from functools import partial
+from logging import config
+from aiogram import Bot, Dispatcher, executor
 from pewpewbot import utils
 from pewpewbot.client import Client
 from pewpewbot.manager import Manager
-from pewpewbot.settings import API_TOKEN
 from pewpewbot.State import State
 
 # Every 30 seconds bot will ping server
@@ -15,28 +16,32 @@ TIMEOUT = 30
 # List of TgCommand which are enabled in command_patterns
 ACTIVE_COMMANDS = utils.get_all_active_commands()
 
+# Configure logging
+config.fileConfig(path.join(path.dirname(path.abspath(__file__)), 'logging.ini'))
+logger = logging.getLogger(__name__)
+logger.propagate = False
+
 
 def main():
-    # Configure logging
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S',
-        filename='pewpew.log'
-    )
+    api_token = os.environ.get('API_TOKEN')
+    login = os.environ.get('LOGIN')
+    password = os.environ.get('PASSWORD')
 
+    if not api_token:
+        logger.error("Empty API_TOKEN for telegram bot, please provide")
+        return
+    if not login or not password:
+        logger.warning("There is no LOGIN or PASSWORD, please use auth command for authorization")
     # Create loop will be used in bot
     loop = asyncio.get_event_loop()
 
     # Initialize bot and manager
-    bot = Bot(token=API_TOKEN, loop=loop)
+    bot = Bot(token=api_token, loop=loop)
     manager = Manager(State(), Client(), bot, logging.getLogger(Manager.__name__))
     try:
-        from settings import LOGIN
-        from settings import PASSWD
-        asyncio.ensure_future(manager.http_client.log_in(LOGIN, PASSWD), loop=loop)
+        asyncio.ensure_future(manager.http_client.log_in(login, password), loop=loop)
     except Exception as e:
-        logging.getLogger(__name__).error("Failed to login")
+        logging.error("Failed to login")
 
     # Use hack for repeated coro every TIMEOUT seconds
     def repeat(coro, loop):

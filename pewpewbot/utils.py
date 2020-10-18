@@ -1,3 +1,4 @@
+from State import CODE_CHAT_KEY, MAIN_CHAT_KEY, DEBUG_CHAT_KEY
 from pewpewbot import command_patterns
 from enum import Enum
 from aiogram import types, Bot
@@ -29,15 +30,17 @@ def parse_new_mode(mode):
 
 
 async def notify_all_channels(manager: Manager, message: types.message):
-    if 'chat_id' in manager.state.other:
-        await manager.bot.send_message(manager.state.other['chat_id'], message)
-    if 'channel_id' in manager.state.other:
-        await manager.bot.send_message(manager.state.other['channel_id'], message)
+    if DEBUG_CHAT_KEY in manager.state.other:
+        await manager.bot.send_message(manager.state.other[DEBUG_CHAT_KEY], message)
+    if CODE_CHAT_KEY in manager.state.other:
+        await manager.bot.send_message(manager.state.other[CODE_CHAT_KEY], message)
+    if MAIN_CHAT_KEY in manager.state.other:
+        await manager.bot.send_message(manager.state.other[MAIN_CHAT_KEY], message)
 
 
 async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
-    if 'chat_id' in manager.state.other:
-        await bot.send_message(manager.state.other['chat_id'], message, parse_mode='Markdown')
+    if CODE_CHAT_KEY in manager.state.other:
+        await bot.send_message(manager.state.other[CODE_CHAT_KEY], message, parse_mode='Markdown')
 
 
 def get_text_mode_status(mode):
