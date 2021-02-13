@@ -12,6 +12,7 @@ class State(object):
             parse_on=False,
             type_on=False,
             maps_on=True,
+            head_doc_on=False,
             tip='',
             link='',
             other={},
@@ -23,6 +24,7 @@ class State(object):
         self.parse_on = parse_on
         self.type_on = type_on
         self.maps_on = maps_on
+        self.head_doc_on = head_doc_on
         self.other = other
         self.tip = tip
         self.link = link
@@ -37,6 +39,10 @@ class State(object):
 
     def set_maps(self, mode):
         self.maps_on = mode
+
+    def set_head_doc(self, mode):
+        self.head_doc_on = mode
+
 
     def get_other(self, name):
         if name in self.other:

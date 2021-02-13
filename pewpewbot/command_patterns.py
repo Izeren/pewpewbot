@@ -28,8 +28,8 @@ KO_COMMAND = TgCommand('ko', '''
 ''', commands_processing.send_ko, True)
 
 IMG_COMMAND = TgCommand('img', '''
-    /img - прислать актуальную изображение с КО в чат.
-''', commands_processing.dummy, False)
+    /img - прислать актуальный скриншот штабного дока, если штаб ведет трансляцию
+''', commands_processing.img, True)
 
 LINK_COMMAND = TgCommand('link', '''
     /link - позволяет запинить сообщение, например ссылки на чаты, ссылку в движок и т.д. 
@@ -52,6 +52,10 @@ PARSE_COMMAND = TgCommand('parse', '''
     /parse - парсинг движка дозора, /parse on, /parse off для переключения режима. /status, чтобы узнать,
 парсится ли сейчас движок
 ''', commands_processing.process_parse, True)
+
+HEAD_DOC_COMMAND = TgCommand('head_doc', '''
+    /head_doc - трансляция штабного дока, /head_doc on, /head_doc off для переключения режима
+''', commands_processing.process_head_doc, True)
 
 MAPS_COMMAND = TgCommand('maps', '''
     /maps - включает парсинг координат из чата. Когда парсинг включен, бот будет присылать локацию в ответ на координаты,

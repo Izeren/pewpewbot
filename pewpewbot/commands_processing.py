@@ -1,7 +1,9 @@
 import datetime
 import logging
+import os
 import re
 import decorator
+from aiogram.types import InputFile
 
 from aiogram import types, Bot
 
@@ -19,7 +21,7 @@ logger.propagate = False
 
 
 @decorator.decorator
-async def safe_dzzzr_interation(fn, bot: Bot, manager: Manager, **kwargs):
+async def safe_dzzzr_interaction(fn, bot: Bot, manager: Manager, **kwargs):
     try:
         return await fn(bot, manager, **kwargs)
     except AuthenticationError as e:
@@ -45,6 +47,15 @@ async def dummy(message: types.Message, manager: Manager, **kwargs):
                         .format(kwargs['command_name']))
 
 
+@safe_dzzzr_interaction
+async def img(message: types.Message, manager: Manager, **kwargs):
+    if manager.state.head_doc_on:
+        await message.reply("Штабной док")
+        await message.reply_photo(InputFile("test.png"))
+    else:
+        await message.reply("Штабной док отключен")
+
+
 async def parse_coords_to_location(message: types.Message, manager: Manager, **kwargs):
     await message.reply("Вы пытаетесь использовать команду {}, но у нее еще нет реализации"
                         .format(kwargs['command_name']))
@@ -54,12 +65,12 @@ async def help(message: types.Message, manager: Manager, **kwargs):
     await message.reply(utils.build_help())
 
 
+async def update_ko(message: types.Message, manager: Manager, **kwargs):
+    koline = await manager.get_or_load_and_parse_koline()
+
+
 async def send_ko(message: types.Message, manager: Manager, **kwargs):
-    if not manager.state.koline:
-        status = await manager.http_client.status()
-        koline = Koline.from_string(status.current_level.koline)
-    else:
-        koline = manager.state.koline
+    koline = await manager.get_or_load_and_parse_koline()
     for sector in koline.sectors:
         if not manager.state.tip:
             await utils.notify_code_chat(manager.bot, manager, views.sector_default_ko_message(sector))
@@ -126,6 +137,16 @@ async def process_parse(message: types.Message, manager: Manager, **kwargs):
         await message.reply("Парсинг {}".format("включен" if mode else "выключен"))
 
 
+async def process_head_doc(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    mode = utils.parse_new_mode(text)
+    if mode is None:
+        await message.reply("Неверный режим использования, используйте 'on' или 'off'")
+    else:
+        manager.state.set_head_doc(mode)
+        await message.reply("Трансляция штабного дока {}".format("включена" if mode else "выключена"))
+
+
 async def process_maps(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     mode = utils.parse_new_mode(text)
@@ -160,7 +181,7 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
     await message.reply(formatted)
 
 
-@safe_dzzzr_interation
+@safe_dzzzr_interaction
 async def login(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     login, passwd = text.split(maxsplit=1)
@@ -169,7 +190,7 @@ async def login(message: types.Message, manager: Manager, **kwargs):
     await manager.http_client.log_in(login, passwd)
 
 
-@safe_dzzzr_interation
+@safe_dzzzr_interaction
 async def process_code(message: types.Message, manager: Manager, **kwargs):
     if not manager.state.type_on:
         return
@@ -194,7 +215,7 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
                 code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
 
 
-@safe_dzzzr_interation
+@safe_dzzzr_interaction
 async def update_level(message: types.Message, manager: Manager, **kwargs):
     status = await manager.http_client.status()
     await message.reply(str(status))
@@ -249,16 +270,17 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
     manager.state.game_status = new_status
 
 
-@safe_dzzzr_interation
+@safe_dzzzr_interaction
 async def update_level_status(bot: Bot, manager: Manager, **kwargs):
-    game_status = await manager.http_client.status()
-    current_level_id = game_status.current_level.levelNumber
-    if not manager.state.game_status:
-        return await _process_next_level(game_status, manager)
-    if manager.state.game_status.current_level.levelNumber != current_level_id:
-        return await _process_next_level(game_status, manager, silent=False)
-    else:
-        return _update_current_level_info(game_status, manager)
+    if manager.state.parse_on:
+        game_status = await manager.http_client.status()
+        current_level_id = game_status.current_level.levelNumber
+        if not manager.state.game_status:
+            return await _process_next_level(game_status, manager)
+        if manager.state.game_status.current_level.levelNumber != current_level_id:
+            return await _process_next_level(game_status, manager, silent=False)
+        else:
+            return _update_current_level_info(game_status, manager)
 
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):
