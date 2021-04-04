@@ -20,3 +20,9 @@ class Manager:
             status = await self.http_client.status()
             self.state.koline = Koline.from_string(status.current_level.koline)
         return self.state.koline
+
+    async def load_and_parse_koline(self):
+        status = await self.http_client.status()
+        self.state.game_status = status
+        self.state.koline = Koline.from_string(status.current_level.koline)
+        return self.state.koline

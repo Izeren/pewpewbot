@@ -1,7 +1,16 @@
+from datetime import timedelta
+
+from State import State
 from models import Sector, ParsedCode
 
 
-def sector_default_ko_message(sector: Sector):
+def get_tm_safe(state: State):
+    if state and state.game_status and state.game_status.current_level:
+        return state.game_status.current_level.tm
+    else:
+        return None
+
+def sector_default_ko_message(sector: Sector, state: State):
     """
     Вьюха списка KO в виде текста
     """
@@ -11,7 +20,12 @@ def sector_default_ko_message(sector: Sector):
     cols = 2  # Колонок всегда 2
     pages = size // (rows * cols) + 1  # Кол-во страниц
 
-    result = "Название сектора: *{}*\n".format(sector.name)
+    result = ""
+    tm = get_tm_safe(state)
+    if tm:
+        result += "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
+    result += "Название сектора: *{}*\n".format(sector.name)
+
     result += "```\n"
 
     for page_index, page in enumerate(range(pages)):  # Номер страницы
@@ -36,13 +50,20 @@ def sector_default_ko_message(sector: Sector):
     return result
 
 
-def not_taken_with_tips(sector, tip):
+def not_taken_with_tips(sector, state: State):
     """
     Вьюха списка не взятых KO с подсказками
     """
-    result = "Сектор: *{}*\n".format(sector.name)
+    result = ""
+
+    tm = get_tm_safe(state)
+    if tm:
+        result += "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
+
+    result += "Сектор: *{}*\n".format(sector.name)
     result += "```\n"
 
+    tip = state.tip
     tips = tip.strip().split('\n')
     for code in sector.codes:
         if code.taken:

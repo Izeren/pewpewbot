@@ -1,6 +1,5 @@
 import datetime
 import logging
-import os
 import re
 import decorator
 from aiogram.types import InputFile
@@ -73,9 +72,9 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
     koline = await manager.get_or_load_and_parse_koline()
     for sector in koline.sectors:
         if not manager.state.tip:
-            await utils.notify_code_chat(manager.bot, manager, views.sector_default_ko_message(sector))
+            await utils.notify_code_chat(manager.bot, manager, views.sector_default_ko_message(sector, manager.state))
         else:
-            await utils.notify_code_chat(manager.bot, manager, views.not_taken_with_tips(sector, manager.state.tip))
+            await utils.notify_code_chat(manager.bot, manager, views.not_taken_with_tips(sector, manager.state))
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -180,6 +179,10 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
     )
     await message.reply(formatted)
 
+async def task(message: types.Message, manager: Manager, **kwargs):
+    if manager.state and manager.state.game_status and manager.state.game_status.current_level:
+        await message.reply(utils.build_pretty_level_question(manager.state.game_status.current_level.question), parse_mode='Markdown')
+
 
 @safe_dzzzr_interaction
 async def login(message: types.Message, manager: Manager, **kwargs):
@@ -225,6 +228,8 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
 async def _process_next_level(status, manager: Manager, silent=True):
     if not silent:
         await utils.notify_all_channels(manager, "Выдан новый уровень")
+        if status and status.current_level and status.current_level.question:
+            await utils.notify_all_channels(manager, utils.build_pretty_level_question(status.current_level.question))
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
     manager.state.reset_pattern()
@@ -315,3 +320,6 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
     key, value = text.split()
     manager.state.other[key] = value
     await message.reply("Для переменной {} установлено значение: {}".format(key, value))
+
+async def get_other(message: types.Message, manager: Manager, **kwargs):
+    await message.reply("Установлены дополнительные проперти: {}".format(manager.state.other))

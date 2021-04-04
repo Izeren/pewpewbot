@@ -75,6 +75,10 @@ STATUS_COMMAND = TgCommand('status', '''
 Используйте ее, чтобы понять, авторизованы ли вы и установлен ли пин.
 ''', commands_processing.get_bot_status, True)
 
+TASK = TgCommand('task', '''
+    /task - текст задания текущего уровня (автоматически присылается при выдаче нового уровня
+''', commands_processing.task, True)
+
 TEST_ERROR_COMMAND = TgCommand('test_error', '''
 ''', commands_processing.dummy, False)
 
@@ -88,6 +92,10 @@ SET_COMMAND = TgCommand('set', '''
     /set key value, позволяет выставить значение переменной в key value формате, работает аналогично link, но позволяет
 указывать настраиваемые ключи
 ''', commands_processing.set_state_key_value, True)
+
+GET_COMMAND = TgCommand('get_other' '''
+    /get_other позволяет узнать текущие установленные дополнительные параметры
+''', commands_processing.get_other, True)
 
 ST_COMMAND = TgCommand('st', '''
     /st позволяет зафорсить апдейт статуса бота (для дебага, с выводом в чат)
