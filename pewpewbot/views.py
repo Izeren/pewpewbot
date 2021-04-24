@@ -50,7 +50,7 @@ def sector_default_ko_message(sector: Sector, state: State):
     return result
 
 
-def not_taken_with_tips(sector, state: State):
+def not_taken_with_tips(sector, tips, state: State):
     """
     Вьюха списка не взятых KO с подсказками
     """
@@ -63,14 +63,9 @@ def not_taken_with_tips(sector, state: State):
     result += "Сектор: *{}*\n".format(sector.name)
     result += "```\n"
 
-    tip = state.tip
-    tips = tip.strip().split('\n')
-    for code in sector.codes:
+    for code, tip in zip(sector.codes, tips):
         if code.taken:
             continue
-        tip = ''
-        if code.label < len(tips):
-            tip = tips[code.label]
         result += "{:<2} {:<3} {}    \n\n".format('{}'.format(code.label + 1), code.ko, tip)
 
     result += "```"

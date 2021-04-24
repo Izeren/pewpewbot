@@ -54,7 +54,10 @@ class State(object):
         return self.tip
 
     def set_tip(self, tip):
-        self.tip = tip
+        sector_tips = [sector_tip.strip() for sector_tip in tip.split("***")]
+        self.tip = []
+        for sector_tip in sector_tips:
+            self.tip.append([tip for tip in [raw_tip.strip() for raw_tip in sector_tip.split("\n")] if len(tip)])
 
     def reset_tip(self):
         self.tip = ''
