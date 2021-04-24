@@ -2,6 +2,7 @@ import datetime
 import logging
 import re
 import decorator
+import pathlib
 from aiogram.types import InputFile
 
 from aiogram import types, Bot
@@ -48,9 +49,13 @@ async def dummy(message: types.Message, manager: Manager, **kwargs):
 
 @safe_dzzzr_interaction
 async def img(message: types.Message, manager: Manager, **kwargs):
+    screeshot_path = "test.png"
+    smart_path = pathlib.Path(screeshot_path)
+    mtime = smart_path.stat().st_mtime
+    age_in_seconds = int(datetime.datetime.today().timestamp() - mtime)
     if manager.state.head_doc_on:
-        await message.reply("Штабной док")
-        await message.reply_photo(InputFile("test.png"))
+        await message.reply_photo(InputFile(screeshot_path),
+                                  "Штабной док\n последнее обновление было {} секунд назад".format(age_in_seconds))
     else:
         await message.reply("Штабной док отключен")
 
