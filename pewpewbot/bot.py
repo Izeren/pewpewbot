@@ -43,13 +43,8 @@ def main():
     except Exception as e:
         logging.error("Failed to login")
 
-    # Use hack for repeated coro every TIMEOUT seconds
-    def repeat(coro, loop):
-        asyncio.ensure_future(coro(bot, manager), loop=loop)
-        loop.call_later(TIMEOUT, repeat, coro, loop)
 
-    # Run timer call inside of loop
-    loop.call_later(TIMEOUT, repeat, commands_processing.update_level_status, loop)
+    loop.create_task(utils.repeat(TIMEOUT, commands_processing.update_level_status, bot, manager))
 
     # Create dispatcher
     dispatcher = Dispatcher(bot)

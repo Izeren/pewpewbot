@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 import patterns
@@ -67,3 +68,9 @@ def get_text_mode_status(mode):
 def get_all_active_commands():
     return list([command for name, command in vars(command_patterns).items()
                  if isinstance(command, TgCommand) and command.enabled])
+
+# Util for performing periodic tasks
+async def repeat(delay, coro, *args, **kwargs):
+    while True:
+        await coro(*args, **kwargs)
+        await asyncio.sleep(delay)
