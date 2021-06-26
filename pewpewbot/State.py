@@ -4,6 +4,8 @@ from pewpewbot import patterns
 CODE_CHAT_KEY = 'code_chat_id'
 MAIN_CHAT_KEY = 'main_chat_id'
 DEBUG_CHAT_KEY = 'debug_chat_id'
+ENGINE_TIMEOUT_KEY = 'engine_timeout'
+DEFAULT_OTHER = {ENGINE_TIMEOUT_KEY: '30'}
 
 
 class State(object):
@@ -15,7 +17,7 @@ class State(object):
             head_doc_on=False,
             tip='',
             link='',
-            other={},
+            other=None,
             code_pattern=patterns.STANDARD_CODE_PATTERN,
             game_status: Status = None,
             koline: Koline = None
@@ -25,7 +27,10 @@ class State(object):
         self.type_on = type_on
         self.maps_on = maps_on
         self.head_doc_on = head_doc_on
-        self.other = other
+        if other is None:
+            self.other = DEFAULT_OTHER
+        else:
+            self.other = other
         self.tip = tip
         self.link = link
         self.game_status = game_status

@@ -44,7 +44,7 @@ def main():
         logging.error("Failed to login")
 
 
-    loop.create_task(utils.repeat(TIMEOUT, commands_processing.update_level_status, bot, manager))
+    loop.create_task(utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
 
     # Create dispatcher
     dispatcher = Dispatcher(bot)

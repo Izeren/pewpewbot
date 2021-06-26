@@ -93,7 +93,7 @@ SET_COMMAND = TgCommand('set', '''
 указывать настраиваемые ключи
 ''', commands_processing.set_state_key_value, True)
 
-GET_COMMAND = TgCommand('get_other' '''
+GET_COMMAND = TgCommand('get_other', '''
     /get_other позволяет узнать текущие установленные дополнительные параметры
 ''', commands_processing.get_other, True)
 

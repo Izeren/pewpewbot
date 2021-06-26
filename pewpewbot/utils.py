@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import re
 
 import patterns
@@ -69,8 +70,19 @@ def get_all_active_commands():
     return list([command for name, command in vars(command_patterns).items()
                  if isinstance(command, TgCommand) and command.enabled])
 
-# Util for performing periodic tasks
-async def repeat(delay, coro, *args, **kwargs):
+# Util for performing periodic tasks. Accepts delay as constant
+async def repeat_const_delay(delay: int, coro, *args, **kwargs):
     while True:
         await coro(*args, **kwargs)
         await asyncio.sleep(delay)
+
+# Util for performing periodic tasks. Accepts a manager and key in manager.state.other so that delay can be changed in runtime
+async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs):
+    while True:
+        await coro(*args, **kwargs)
+        try:
+            await asyncio.sleep(int(manager.state.other[key]))
+        except ValueError:
+            logging.error(f"Key {key} is not found in manager.state.other or is not int. Using 30.")
+            await asyncio.sleep(30)
+        
