@@ -231,30 +231,30 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
 
 
 async def _process_next_level(status, manager: Manager, silent=True):
-    if not silent:
-        await utils.notify_all_channels(manager, "Выдан новый уровень")
-        if status:
-            if status.current_level:
-                if status.current_level.question:
-                    await utils.notify_all_channels(manager, utils.format_level_message(status.current_level.question))
-                    schema_url = utils.get_schema_url_or_none(status.current_level.question)
-                    if schema_url:
-                        await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
-                    else:
-                        await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
-                if status.current_level.locationComment:
-                    await utils.notify_all_channels(
-                        manager,
-                        utils.format_level_message(status.current_level.locationComment))
-            else:
-                await utils.notify_all_channels(manager, "Не удалось загрузить статус по уровню")
-        else:
-            await utils.notify_all_channels(manager, "Не удалось загрузить статус по игре")
-
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
-    manager.state.reset('pattern')
-    manager.state.reset('tip')
+    manager.state.reset_pattern()
+    manager.state.reset_tip()
+    if silent:
+        return
+    await utils.notify_all_channels(manager, "Выдан новый уровень")
+    if not status:
+        await utils.notify_all_channels(manager, "Не удалось загрузить статус по игре")
+        return
+    if not status.current_level:
+        await utils.notify_all_channels(manager, "Не удалось загрузить статус по уровню")
+        return
+    if status.current_level.question:
+        await utils.notify_all_channels(manager, utils.format_level_message(status.current_level.question))
+        schema_url = utils.get_schema_url_or_none(status.current_level.question)
+        if schema_url:
+            await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+        else:
+            await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
+    if status.current_level.locationComment:
+        await utils.notify_all_channels(
+            manager,
+            utils.format_level_message(status.current_level.locationComment))
 
 
 def _update_current_level_info(game_status: Status, manager: Manager):
