@@ -5,7 +5,16 @@ CODE_CHAT_KEY = 'code_chat_id'
 MAIN_CHAT_KEY = 'main_chat_id'
 DEBUG_CHAT_KEY = 'debug_chat_id'
 ENGINE_TIMEOUT_KEY = 'engine_timeout'
-DEFAULT_OTHER = {ENGINE_TIMEOUT_KEY: '30'}
+SCREENSHOT_URL_KEY='screenshot_url'
+SCREENSHOT_TIMEOUT_KEY='screenshot_timeout'
+SCREENSHOT_HEIGHT='screenshot_height'
+SCREENSHOT_WIDTH='screenshot_width'
+DEFAULT_OTHER = {
+    ENGINE_TIMEOUT_KEY: '30',
+    SCREENSHOT_TIMEOUT_KEY: '5',
+    SCREENSHOT_HEIGHT: '1000',
+    SCREENSHOT_WIDTH: '1000',
+}
 
 
 class State(object):
@@ -14,7 +23,6 @@ class State(object):
             parse_on=False,
             type_on=False,
             maps_on=True,
-            head_doc_on=False,
             tip='',
             link='',
             other=None,
@@ -26,7 +34,6 @@ class State(object):
         self.parse_on = parse_on
         self.type_on = type_on
         self.maps_on = maps_on
-        self.head_doc_on = head_doc_on
         if other is None:
             self.other = DEFAULT_OTHER
         else:
@@ -44,10 +51,6 @@ class State(object):
 
     def set_maps(self, mode):
         self.maps_on = mode
-
-    def set_head_doc(self, mode):
-        self.head_doc_on = mode
-
 
     def get_other(self, name):
         if name in self.other:

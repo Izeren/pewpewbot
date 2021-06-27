@@ -79,7 +79,10 @@ async def repeat_const_delay(delay: int, coro, *args, **kwargs):
 # Util for performing periodic tasks. Accepts a manager and key in manager.state.other so that delay can be changed in runtime
 async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs):
     while True:
-        await coro(*args, **kwargs)
+        try:
+            await coro(*args, **kwargs)
+        except Exception as exc:
+            logging.error("Exception in task", exc_info=exc)
         try:
             await asyncio.sleep(int(manager.state.other[key]))
         except ValueError:

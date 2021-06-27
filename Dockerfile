@@ -3,7 +3,7 @@ LABEL maintainer="Alex <izeren.ml@gmail.com>" \
       description="Dozor aiogram Telegram bot"
 
 COPY requirements.txt /requirements.txt
-RUN apk add --update alpine-sdk && \
+RUN apk add --update alpine-sdk chromium chromium-chromedriver && \
     python -m pip install -r /requirements.txt
 
 WORKDIR /app

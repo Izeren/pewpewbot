@@ -50,15 +50,15 @@ async def dummy(message: types.Message, manager: Manager, **kwargs):
 
 @safe_dzzzr_interaction
 async def img(message: types.Message, manager: Manager, **kwargs):
-    screeshot_path = "test.png"
-    smart_path = pathlib.Path(screeshot_path)
+    screenshot_path = manager.screenshoter.file_name
+    smart_path = pathlib.Path(screenshot_path)
+    if not smart_path.is_file():
+        await message.reply("URL не настроен или ещё не сделано ни одного скриншота")
+        return
     mtime = smart_path.stat().st_mtime
     age_in_seconds = int(datetime.datetime.today().timestamp() - mtime)
-    if manager.state.head_doc_on:
-        await message.reply_photo(InputFile(screeshot_path),
-                                  "Штабной док\n последнее обновление было {} секунд назад".format(age_in_seconds))
-    else:
-        await message.reply("Штабной док отключен")
+    await message.reply_photo(InputFile(screenshot_path),
+                                "Штабной док\n последнее обновление было {} секунд назад".format(age_in_seconds))
 
 
 async def parse_coords_to_location(message: types.Message, manager: Manager, **kwargs):
@@ -141,17 +141,6 @@ async def process_parse(message: types.Message, manager: Manager, **kwargs):
     else:
         manager.state.set_parse(mode)
         await message.reply("Парсинг {}".format("включен" if mode else "выключен"))
-
-
-async def process_head_doc(message: types.Message, manager: Manager, **kwargs):
-    text = utils.trim_command_name(message, kwargs['command_name']).strip()
-    mode = utils.parse_new_mode(text)
-    if mode is None:
-        await message.reply("Неверный режим использования, используйте 'on' или 'off'")
-    else:
-        manager.state.set_head_doc(mode)
-        await message.reply("Трансляция штабного дока {}".format("включена" if mode else "выключена"))
-
 
 async def process_maps(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()

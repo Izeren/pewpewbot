@@ -53,10 +53,6 @@ PARSE_COMMAND = TgCommand('parse', '''
 парсится ли сейчас движок
 ''', commands_processing.process_parse, True)
 
-HEAD_DOC_COMMAND = TgCommand('head_doc', '''
-    /head_doc - трансляция штабного дока, /head_doc on, /head_doc off для переключения режима
-''', commands_processing.process_head_doc, True)
-
 MAPS_COMMAND = TgCommand('maps', '''
     /maps - включает парсинг координат из чата. Когда парсинг включен, бот будет присылать локацию в ответ на координаты,
 /maps on, /maps off для переключения режима. /status, чтобы узнать, парсится ли сейчас движок

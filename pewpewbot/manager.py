@@ -6,12 +6,14 @@ from aiogram import Bot
 from models import Koline
 from pewpewbot.State import State
 from pewpewbot.client import Client
+from pewpewbot.screenshot import Screenshoter
 
 
 @dataclass
 class Manager:
     state: State
     http_client: Client
+    screenshoter: Screenshoter
     bot: Bot
     logger: Logger
 
