@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'ref to deploy'
+        description: 'Ref to deploy'
         required: true
         default: 'main'
 
