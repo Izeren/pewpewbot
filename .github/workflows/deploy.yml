@@ -51,7 +51,7 @@ jobs:
           -e VERSION=${{ steps.build.outputs.sha_short }} \
           -v logs:/logs \
           -d \
-          pewpewbot:${{ github.event.inputs.version }}
+          pewpewbot:${{ steps.build.outputs.sha_short }}
           '
       - name: Check if container is running
         run: |
