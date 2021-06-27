@@ -1,20 +1,64 @@
-name: Manually triggered workflow
+name: Deploy to server
 on:
   workflow_dispatch:
     inputs:
-      name:
-        description: 'Person to greet'
+      version:
+        description: 'Ref to deploy'
         required: true
-        default: 'Mona the Octocat'
-      home:
-        description: 'location'
-        required: false
-        default: 'The Octoverse'
+        default: 'main'
 
 jobs:
-  say_hello:
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "Hello ${{ github.event.inputs.name }}!"
-          echo "- in ${{ github.event.inputs.home }}!"
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.version }}
+      - name: Creating SSH connection
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/id_rsa
+          chmod 600 ~/id_rsa
+          mkdir ~/.ssh
+          ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} 'echo Success!'
+      - name: Uploading code to server
+        run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          rm -rf /home/ubuntu/github_deploy
+          '
+          scp -i ~/id_rsa -r $GITHUB_WORKSPACE ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/github_deploy
+      - name: Building container
+        id: build
+        run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          cd /home/ubuntu/github_deploy && \
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)" && \
+          docker build -t pewpewbot:$(git rev-parse --short HEAD) .
+          '
+      - name: Removing old container
+        run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          docker rm -f pewpewbot_gh_action || true
+          '
+      - name: Starting container
+        run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          docker run \
+          --name pewpewbot_gh_action \
+          -e API_TOKEN=${{ secrets.API_TOKEN }} \
+          -e LOGIN=${{ secrets.LOGIN }} \
+          -e PASSWORD=${{ secrets.PASSWORD }} \
+          -e VERSION=${{ steps.build.outputs.sha_short }} \
+          -v logs:/logs \
+          -d \
+          pewpewbot:${{ steps.build.outputs.sha_short }}
+          '
+      - name: Check if container is running
+        run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          sleep 5
+          if [ "$( docker container inspect -f '{{.State.Status}}' pewpewbot_gh_action )" != "running" ]; then
+            false
+          fi
+          '
+          
