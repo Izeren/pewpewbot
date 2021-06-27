@@ -52,4 +52,10 @@ jobs:
           -d \
           pewpewbot:${{ github.event.inputs.version }}
           '
+      - name: Check if container is running
+        run: |
+          sleep 5
+          if [ "$( docker container inspect -f '{{.State.Status}}' pewpewbot_gh_action )" != "running" ]; then
+            false
+          fi
           
