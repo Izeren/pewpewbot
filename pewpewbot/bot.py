@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+from pewpewbot.screenshot import Screenshoter
 import commands_processing
 from os import path
 from functools import partial
@@ -9,7 +10,7 @@ from aiogram import Bot, Dispatcher, executor
 from pewpewbot import utils
 from pewpewbot.client import Client
 from pewpewbot.manager import Manager
-from pewpewbot.State import State
+from pewpewbot.State import ENGINE_TIMEOUT_KEY, SCREENSHOT_TIMEOUT_KEY, State
 
 # List of TgCommand which are enabled in command_patterns
 ACTIVE_COMMANDS = utils.get_all_active_commands()
@@ -35,14 +36,17 @@ def main():
 
     # Initialize bot and manager
     bot = Bot(token=api_token, loop=loop)
-    manager = Manager(State(), Client(), bot, logging.getLogger(Manager.__name__))
+    state = State()
+    screenshoter = Screenshoter(loop=loop) # Can use separate loop here
+    manager = Manager(state, Client(), screenshoter, bot, logging.getLogger(Manager.__name__))
     try:
         asyncio.ensure_future(manager.http_client.log_in(login, password), loop=loop)
     except Exception as e:
         logging.error("Failed to login")
 
 
-    loop.create_task(utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
+    loop.create_task(utils.repeat_runtime_delay(manager, ENGINE_TIMEOUT_KEY, commands_processing.update_level_status, bot, manager))
+    loop.create_task(utils.repeat_runtime_delay(manager, SCREENSHOT_TIMEOUT_KEY, screenshoter.update_screenshot, state))
 
     # Create dispatcher
     dispatcher = Dispatcher(bot)
