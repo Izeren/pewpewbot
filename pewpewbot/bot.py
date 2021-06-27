@@ -11,8 +11,6 @@ from pewpewbot.client import Client
 from pewpewbot.manager import Manager
 from pewpewbot.State import State
 
-# Every 30 seconds bot will ping server
-TIMEOUT = 30
 # List of TgCommand which are enabled in command_patterns
 ACTIVE_COMMANDS = utils.get_all_active_commands()
 
