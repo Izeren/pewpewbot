@@ -28,10 +28,11 @@ jobs:
           '
           scp -i ~/id_rsa -r $GITHUB_WORKSPACE ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/github_deploy
       - name: Building container
+        id: build
         run: |
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
-          export VERSION_SHA=$(git rev-parse --short HEAD) 
           cd /home/ubuntu/github_deploy && \
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)" && \
           docker build -t pewpewbot:${{ github.event.inputs.version }} .
           '
       - name: Removing old container
@@ -47,15 +48,17 @@ jobs:
           -e API_TOKEN=${{ secrets.API_TOKEN }} \
           -e LOGIN=${{ secrets.LOGIN }} \
           -e PASSWORD=${{ secrets.PASSWORD }} \
-          -e VERSION=$VERSION_SHA \
+          -e VERSION=${{ steps.build.outputs.sha_short }} \
           -v logs:/logs \
           -d \
           pewpewbot:${{ github.event.inputs.version }}
           '
       - name: Check if container is running
         run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
           sleep 5
           if [ "$( docker container inspect -f '{{.State.Status}}' pewpewbot_gh_action )" != "running" ]; then
             false
           fi
+          '
           
