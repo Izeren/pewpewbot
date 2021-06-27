@@ -42,14 +42,14 @@ jobs:
       - name: Starting container
         run: |
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
-          docker run 
-          --name pewpewbot_gh_action
-          -e API_TOKEN=${{ secrets.API_TOKEN }}
-          -e LOGIN=${{ secrets.LOGIN }}
-          -e PASSWORD=${{ secrets.PASSWORD }}
-          -e VERSION=$VERSION_SHA
-          -v logs:/logs
-          -d
+          docker run \
+          --name pewpewbot_gh_action \
+          -e API_TOKEN=${{ secrets.API_TOKEN }} \
+          -e LOGIN=${{ secrets.LOGIN }} \
+          -e PASSWORD=${{ secrets.PASSWORD }} \
+          -e VERSION=$VERSION_SHA \
+          -v logs:/logs \
+          -d \
           pewpewbot:${{ github.event.inputs.version }}
           '
           
