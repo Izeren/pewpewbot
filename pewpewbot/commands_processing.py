@@ -77,7 +77,8 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
             await utils.notify_code_chat(manager.bot, manager, views.sector_default_ko_message(sector, manager.state))
     else:
         for sector, sector_tip in zip(koline.sectors, manager.state.tip):
-            await utils.notify_code_chat(manager.bot, manager, views.not_taken_with_tips(sector, sector_tip, manager.state))
+            await utils.notify_code_chat(manager.bot, manager,
+                                         views.not_taken_with_tips(sector, sector_tip, manager.state))
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -131,27 +132,27 @@ async def process_pattern(message: types.Message, manager: Manager, **kwargs):
 
 async def process_parse(message: types.Message, manager: Manager, **kwargs):
     await process_bool_setting(
-        message=message, 
-        manager=manager, 
-        state_field='parse_on', 
-        desc="Парсинг", 
+        message=message,
+        manager=manager,
+        state_field='parse_on',
+        desc="Парсинг",
         command_name=kwargs['command_name'])
 
 async def process_maps(message: types.Message, manager: Manager, **kwargs):
     await process_bool_setting(
-        message=message, 
-        manager=manager, 
-        state_field='maps_on', 
-        desc="Парсинг координат из чата", 
+        message=message,
+        manager=manager,
+        state_field='maps_on',
+        desc="Парсинг координат из чата",
         command_name=kwargs['command_name'])
 
 
 async def process_type(message: types.Message, manager: Manager, **kwargs):
     await process_bool_setting(
-        message=message, 
-        manager=manager, 
-        state_field='type_on', 
-        desc="Автоматический парсинг кодов", 
+        message=message,
+        manager=manager,
+        state_field='type_on',
+        desc="Автоматический парсинг кодов",
         command_name=kwargs['command_name'])
 
 async def process_bool_setting(message: types.Message, manager: Manager, state_field: str, desc: str, command_name:str):
@@ -181,9 +182,11 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
     )
     await message.reply(formatted)
 
+
 async def task(message: types.Message, manager: Manager, **kwargs):
     if manager.state and manager.state.game_status and manager.state.game_status.current_level:
-        await message.reply(utils.build_pretty_level_question(manager.state.game_status.current_level.question), parse_mode='Markdown')
+        await message.reply(utils.build_pretty_level_question(manager.state.game_status.current_level.question),
+                            parse_mode='Markdown')
 
 
 @safe_dzzzr_interaction
@@ -230,8 +233,20 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
 async def _process_next_level(status, manager: Manager, silent=True):
     if not silent:
         await utils.notify_all_channels(manager, "Выдан новый уровень")
-        if status and status.current_level and status.current_level.question:
-            await utils.notify_all_channels(manager, utils.build_pretty_level_question(status.current_level.question))
+        if status:
+            if status.current_level:
+                if status.current_level.question:
+                    await utils.notify_all_channels(manager, utils.format_level_message(status.current_level.question))
+                    await utils.notify_all_channels(manager, utils.parse_schema(status.current_level.question))
+                if status.current_level.locationComment:
+                    await utils.notify_all_channels(
+                        manager,
+                        utils.format_level_message(status.current_level.locationComment))
+            else:
+                await utils.notify_all_channels(manager, "Не удалось загрузить статус по уровню")
+        else:
+            await utils.notify_all_channels(manager, "Не удалось загрузить статус по игре")
+
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
     manager.state.reset('pattern')
@@ -323,10 +338,11 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
     try:
         setattr(manager.state, key, value)
         await message.reply(f"Для переменной {key} установлено значение: {value}")
-    except AttributeError: 
+    except AttributeError:
         await message.reply(f"Переменной {key} не существует")
-    except ValueError: 
+    except ValueError:
         await message.reply(f"{value} - недопустимое значение для переменной {key}")
+
 
 async def get_all_params(message: types.Message, manager: Manager, **kwargs):
     values = asdict(manager.state)

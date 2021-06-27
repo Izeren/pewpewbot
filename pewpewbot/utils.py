@@ -15,20 +15,27 @@ class Modes(Enum):
     ENABLED = "on"
     DISABLED = "off"
 
-def build_pretty_level_question(question: str):
-    raw_question = re.sub(CLEAN_TAGS_RE, '', question)
-    coord_part_ids = [c.span() for c in re.finditer(patterns.STANDARD_COORDS_PATTERN, raw_question)]
+
+def clean_html_tags(message):
+    return re.sub(CLEAN_TAGS_RE, '', message)
+
+
+def pretty_format_message_with_coords(message):
+    coord_part_ids = [c.span() for c in re.finditer(patterns.STANDARD_COORDS_PATTERN, message)]
     start = 0
     result = ""
     for index in range(len(coord_part_ids) // 2):
         c_start = coord_part_ids[2 * index][0]
         c_end = coord_part_ids[2 * index + 1][1]
-        result += raw_question[start:c_start] + '`' + raw_question[c_start:c_end] + '`'
+        result += message[start:c_start] + '`' + message[c_start:c_end] + '`'
         start = c_end
-    if start < len(raw_question):
-        result += raw_question[start:]
+    if start < len(message):
+        result += message[start:]
     return result
 
+
+def format_level_message(question: str):
+    return pretty_format_message_with_coords(clean_html_tags(question))
 
 
 def trim_command_name(message: types.Message, command_name):
@@ -87,4 +94,3 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
         except AttributeError:
             logging.error(f"Key {key} is not found in manager.state. Using 30.")
             await asyncio.sleep(30)
-        
