@@ -101,6 +101,10 @@ ST_COMMAND = TgCommand('st', '''
     /st позволяет зафорсить апдейт статуса бота (для дебага, с выводом в чат)
 ''', commands_processing.update_level, True)
 
+GET_VERSION_COMMAND = TgCommand('version', '''
+    /version позволяет узнать текущую версию бота
+''', commands_processing.get_version, True)
+
 FORCE_CODE_COMMAND = TgCommand('', '''
     Используйте "/ code" или ".code" чтобы пробить код без проверки регулярного выражения 
 ''', commands_processing.process_code, True, pattern=r'/ ')

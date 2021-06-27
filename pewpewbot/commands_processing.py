@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import re
 import decorator
 import pathlib
@@ -329,3 +330,7 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
 
 async def get_other(message: types.Message, manager: Manager, **kwargs):
     await message.reply("Установлены дополнительные проперти: {}".format(manager.state.other))
+
+async def get_version(message: types.Message, manager: Manager, **kwargs):
+    msg = os.environ.get("VERSION", "Не задана")
+    await message.reply(f"Версия бота: {msg}")
