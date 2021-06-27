@@ -20,5 +20,5 @@ jobs:
           chmod 600 ~/id_rsa
           mkdir ~/.ssh
           ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-          scp -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} $GITHUB_WORKSPACE /home/ubuntu/github_deploy
+          scp -i ~/id_rsa -r $GITHUB_WORKSPACE ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/github_deploy
           
