@@ -237,7 +237,11 @@ async def _process_next_level(status, manager: Manager, silent=True):
             if status.current_level:
                 if status.current_level.question:
                     await utils.notify_all_channels(manager, utils.format_level_message(status.current_level.question))
-                    await utils.notify_all_channels(manager, utils.parse_schema(status.current_level.question))
+                    schema_url = utils.get_schema_url_or_none(status.current_level.question)
+                    if schema_url:
+                        await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+                    else:
+                        await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
                 if status.current_level.locationComment:
                     await utils.notify_all_channels(
                         manager,

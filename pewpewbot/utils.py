@@ -11,6 +11,9 @@ from pewpewbot.manager import Manager
 
 CLEAN_TAGS_RE = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 
+DZZZR_UPLOADED_FILES_LINK = 'http://classic.dzzzr.ru/'
+
+
 class Modes(Enum):
     ENABLED = "on"
     DISABLED = "off"
@@ -39,7 +42,7 @@ def format_level_message(question: str):
 
 
 def trim_command_name(message: types.Message, command_name):
-    return message.text[len(command_name)+2:]
+    return message.text[len(command_name) + 2:]
 
 
 def parse_new_mode(mode):
@@ -60,6 +63,15 @@ async def notify_all_channels(manager: Manager, message: types.message):
         await manager.bot.send_message(manager.state.main_chat_id, message, parse_mode='Markdown')
 
 
+async def image_to_all_channels(manager: Manager, message: types.message, link: str):
+    if DEBUG_CHAT_KEY in manager.state.other:
+        await manager.bot.send_photo(manager.state.other[DEBUG_CHAT_KEY], link, message, parse_mode='Markdown')
+    if CODE_CHAT_KEY in manager.state.other:
+        await manager.bot.send_photo(manager.state.other[CODE_CHAT_KEY], link, message, parse_mode='Markdown')
+    if MAIN_CHAT_KEY in manager.state.other:
+        await manager.bot.send_photo(manager.state.other[MAIN_CHAT_KEY], link, message, parse_mode='Markdown')
+
+
 async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
     if manager.state.code_chat_id is not None:
         await bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
@@ -78,6 +90,7 @@ async def repeat_const_delay(delay: int, coro, *args, **kwargs):
             logging.error("Exception in task", exc_info=exc)
         await asyncio.sleep(delay)
 
+
 # Util for performing periodic tasks. Accepts a manager and key in manager.state so that delay can be changed in runtime
 async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs):
     while True:
@@ -94,3 +107,8 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
         except AttributeError:
             logging.error(f"Key {key} is not found in manager.state. Using 30.")
             await asyncio.sleep(30)
+
+
+def get_schema_url_or_none(level_message):
+    links = re.findall(patterns.SHEMA_LINK_PATTERN, level_message)
+    return DZZZR_UPLOADED_FILES_LINK + links[0] if len(links) else None
