@@ -18,5 +18,6 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/id_rsa
           sudo chmod 600 ~/id_rsa
+          ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} -f 'echo Success!'
           
