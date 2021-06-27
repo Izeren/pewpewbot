@@ -2,19 +2,21 @@ name: Manually triggered workflow
 on:
   workflow_dispatch:
     inputs:
-      name:
-        description: 'Person to greet'
+      version:
+        description: 'ref to deploy'
         required: true
-        default: 'Mona the Octocat'
-      home:
-        description: 'location'
-        required: false
-        default: 'The Octoverse'
+        default: 'main'
 
 jobs:
-  say_hello:
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "Hello ${{ github.event.inputs.name }}!"
-          echo "- in ${{ github.event.inputs.home }}!"
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.version }}
+      - name: Creating SSH connection
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/id_rsa
+          sudo chmod 600 ~/id_rsa
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} -f 'echo Success!'
+          
