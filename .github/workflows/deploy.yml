@@ -33,7 +33,7 @@ jobs:
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
           cd /home/ubuntu/github_deploy && \
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)" && \
-          docker build -t pewpewbot:${{ github.event.inputs.version }} .
+          docker build -t pewpewbot:$(git rev-parse --short HEAD) .
           '
       - name: Removing old container
         run: |
