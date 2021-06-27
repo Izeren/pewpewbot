@@ -110,5 +110,5 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
 
 
 def get_schema_url_or_none(level_message):
-    links = re.findall(patterns.SHEMA_LINK_PATTERN, level_message)
+    links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message)
     return DZZZR_UPLOADED_FILES_LINK + links[0] if len(links) else None

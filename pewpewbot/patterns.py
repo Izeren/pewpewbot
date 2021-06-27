@@ -8,7 +8,7 @@ STANDARD_CODE_PATTERN = r'\d*[dr]\d*[dr]\d*'
 # Pattern for command with forced code
 FORCED_CODE_PATTERN = r'^/ '
 # Pattern for Level Scheme link parsing
-SHEMA_LINK_PATTERN = r'<a href="../../(uploaded.*?)".*>[С|с]хема</a>'
+SCHEMA_LINK_PATTERN = r'<a href="../../(uploaded.*?)".*>[С|с]хема</a>'
 
 ################################################################################
 # Current block is for direct bot commands patterns
