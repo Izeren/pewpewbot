@@ -23,11 +23,14 @@ jobs:
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} 'echo Success!'
       - name: Uploading code to server
         run: |
+          ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          rm -rf /home/ubuntu/github_deploy
+          '
           scp -i ~/id_rsa -r $GITHUB_WORKSPACE ubuntu@${{ secrets.SERVER_HOST }}:/home/ubuntu/github_deploy
       - name: Building container
         run: |
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
-          export VERSION_SHA=$(git rev-parse --short HEAD)
+          export VERSION_SHA=$(git rev-parse --short HEAD) 
           cd /home/ubuntu/github_deploy && \
           docker build -t pewpewbot:${{ github.event.inputs.version }} .
           '
