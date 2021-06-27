@@ -17,8 +17,8 @@ jobs:
       - name: Creating SSH connection
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/id_rsa
-          sudo chmod 600 ~/id_rsa
-          touch ~/.ssh/known_hosts
+          chmod 600 ~/id_rsa
+          mkdir ~/.ssh
           ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} -f 'echo Success!'
           
