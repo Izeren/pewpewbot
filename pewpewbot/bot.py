@@ -10,7 +10,7 @@ from aiogram import Bot, Dispatcher, executor
 from pewpewbot import utils
 from pewpewbot.client import Client
 from pewpewbot.manager import Manager
-from pewpewbot.State import ENGINE_TIMEOUT_KEY, SCREENSHOT_TIMEOUT_KEY, State
+from pewpewbot.State import State
 
 # List of TgCommand which are enabled in command_patterns
 ACTIVE_COMMANDS = utils.get_all_active_commands()
@@ -45,8 +45,8 @@ def main():
         logging.error("Failed to login")
 
 
-    loop.create_task(utils.repeat_runtime_delay(manager, ENGINE_TIMEOUT_KEY, commands_processing.update_level_status, bot, manager))
-    loop.create_task(utils.repeat_runtime_delay(manager, SCREENSHOT_TIMEOUT_KEY, screenshoter.update_screenshot, state))
+    loop.create_task(utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
+    loop.create_task(utils.repeat_runtime_delay(manager, 'screenshot_timeout', screenshoter.update_screenshot, state))
 
     # Create dispatcher
     dispatcher = Dispatcher(bot)
