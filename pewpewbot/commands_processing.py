@@ -66,10 +66,6 @@ async def parse_coords_to_location(message: types.Message, manager: Manager, **k
                         .format(kwargs['command_name']))
 
 
-async def help(message: types.Message, manager: Manager, **kwargs):
-    await message.reply(utils.build_help())
-
-
 async def update_ko(message: types.Message, manager: Manager, **kwargs):
     koline = await manager.get_or_load_and_parse_koline()
 

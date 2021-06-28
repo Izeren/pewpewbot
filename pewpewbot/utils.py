@@ -29,9 +29,6 @@ def build_pretty_level_question(question: str):
         result += raw_question[start:]
     return result
 
-def build_help():
-    return ''.join((value.help_text for name, value in vars(command_patterns).items()
-                    if isinstance(value, TgCommand) and value.enabled))
 
 
 def trim_command_name(message: types.Message, command_name):
@@ -64,10 +61,6 @@ async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
 def get_text_mode_status(mode):
     return "включен" if mode else "выключен"
 
-
-def get_all_active_commands():
-    return list([command for name, command in vars(command_patterns).items()
-                 if isinstance(command, TgCommand) and command.enabled])
 
 # Util for performing periodic tasks. Accepts delay as constant
 async def repeat_const_delay(delay: int, coro, *args, **kwargs):
