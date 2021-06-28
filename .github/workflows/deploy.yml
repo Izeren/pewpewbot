@@ -43,13 +43,17 @@ jobs:
       - name: Starting container
         run: |
           ssh -i ~/id_rsa ubuntu@${{ secrets.SERVER_HOST }} '
+          docker volume create logs && \
+          docker volume create config && \ 
           docker run \
           --name pewpewbot_gh_action \
           -e API_TOKEN=${{ secrets.API_TOKEN }} \
           -e LOGIN=${{ secrets.LOGIN }} \
           -e PASSWORD=${{ secrets.PASSWORD }} \
           -e VERSION=${{ steps.build.outputs.sha_short }} \
+          -e STATE_FILE_PATH=/config/state.json \
           -v logs:/logs \
+          -v config:/config \
           -d \
           pewpewbot:${{ steps.build.outputs.sha_short }}
           '

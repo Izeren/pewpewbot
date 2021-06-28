@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+import pathlib
 from pewpewbot.screenshot import Screenshoter
 import commands_processing
 from os import path
@@ -14,6 +15,7 @@ from pewpewbot.State import State
 
 # List of TgCommand which are enabled in command_patterns
 ACTIVE_COMMANDS = utils.get_all_active_commands()
+DUMP_CONFIG_TIMEOUT = 30
 
 # Configure logging
 config.fileConfig(path.join(path.dirname(path.abspath(__file__)), 'logging.ini'))
@@ -25,6 +27,7 @@ def main():
     api_token = os.environ.get('API_TOKEN')
     login = os.environ.get('LOGIN')
     password = os.environ.get('PASSWORD')
+    state_file_path = pathlib.Path(os.environ.get('STATE_FILE_PATH', './state.json'))
 
     if not api_token:
         logger.error("Empty API_TOKEN for telegram bot, please provide")
@@ -37,6 +40,11 @@ def main():
     # Initialize bot and manager
     bot = Bot(token=api_token, loop=loop)
     state = State()
+    if state_file_path.is_file():
+        try:
+            state.load_params(state_file_path)
+        except Exception as exc:
+            logger.warn("Failed to load params", exc_info=exc)
     screenshoter = Screenshoter(loop=loop) # Can use separate loop here
     manager = Manager(state, Client(), screenshoter, bot, logging.getLogger(Manager.__name__))
     try:
@@ -47,6 +55,7 @@ def main():
 
     loop.create_task(utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
     loop.create_task(utils.repeat_runtime_delay(manager, 'screenshot_timeout', screenshoter.update_screenshot, state))
+    loop.create_task(utils.repeat_const_delay(DUMP_CONFIG_TIMEOUT, state.dump_params, state_file_path))
 
     # Create dispatcher
     dispatcher = Dispatcher(bot)
