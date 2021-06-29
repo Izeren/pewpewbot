@@ -55,21 +55,21 @@ def parse_new_mode(mode):
 
 
 async def notify_all_channels(manager: Manager, message: types.message):
-    if manager.state.debug_chat_id is not None:
+    if manager.state.debug_chat_id:
         await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
-    if manager.state.code_chat_id is not None:
+    if manager.state.code_chat_id:
         await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
-    if manager.state.main_chat_id is not None:
+    if manager.state.main_chat_id:
         await manager.bot.send_message(manager.state.main_chat_id, message, parse_mode='Markdown')
 
 
 async def image_to_all_channels(manager: Manager, message: types.message, link: str):
-    if DEBUG_CHAT_KEY in manager.state.other:
-        await manager.bot.send_photo(manager.state.other[DEBUG_CHAT_KEY], link, message, parse_mode='Markdown')
-    if CODE_CHAT_KEY in manager.state.other:
-        await manager.bot.send_photo(manager.state.other[CODE_CHAT_KEY], link, message, parse_mode='Markdown')
-    if MAIN_CHAT_KEY in manager.state.other:
-        await manager.bot.send_photo(manager.state.other[MAIN_CHAT_KEY], link, message, parse_mode='Markdown')
+    if manager.state.debug_chat_id:
+        await manager.bot.send_photo(manager.state.debug_chat_id, link, message, parse_mode='Markdown')
+    if manager.state.code_chat_id:
+        await manager.bot.send_photo(manager.state.code_chat_id, link, message, parse_mode='Markdown')
+    if manager.state.main_chat_id:
+        await manager.bot.send_photo(manager.state.main_chat_id, link, message, parse_mode='Markdown')
 
 
 async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
@@ -109,6 +109,6 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
             await asyncio.sleep(30)
 
 
-def get_schema_url_or_none(level_message):
-    links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message)
-    return DZZZR_UPLOADED_FILES_LINK + links[0] if len(links) else None
+def get_schema_urls(level_message):
+    links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message.lower())
+    return tuple(DZZZR_UPLOADED_FILES_LINK + link for link in links)

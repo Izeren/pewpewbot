@@ -58,7 +58,7 @@ async def img(message: types.Message, manager: Manager, **kwargs):
     mtime = smart_path.stat().st_mtime
     age_in_seconds = int(datetime.datetime.today().timestamp() - mtime)
     await message.reply_photo(InputFile(screenshot_path),
-                                "Штабной док\n последнее обновление было {} секунд назад".format(age_in_seconds))
+                              "Штабной док\n последнее обновление было {} секунд назад".format(age_in_seconds))
 
 
 async def parse_coords_to_location(message: types.Message, manager: Manager, **kwargs):
@@ -138,6 +138,7 @@ async def process_parse(message: types.Message, manager: Manager, **kwargs):
         desc="Парсинг",
         command_name=kwargs['command_name'])
 
+
 async def process_maps(message: types.Message, manager: Manager, **kwargs):
     await process_bool_setting(
         message=message,
@@ -155,7 +156,9 @@ async def process_type(message: types.Message, manager: Manager, **kwargs):
         desc="Автоматический парсинг кодов",
         command_name=kwargs['command_name'])
 
-async def process_bool_setting(message: types.Message, manager: Manager, state_field: str, desc: str, command_name:str):
+
+async def process_bool_setting(message: types.Message, manager: Manager, state_field: str, desc: str,
+                               command_name: str):
     """
     Updates bool settings from message in state.
     """
@@ -166,7 +169,6 @@ async def process_bool_setting(message: types.Message, manager: Manager, state_f
     else:
         setattr(manager.state, state_field, mode)
         await message.reply(f"{desc} {utils.get_text_mode_status(mode)}")
-
 
 
 async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
@@ -233,8 +235,8 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
 async def _process_next_level(status, manager: Manager, silent=True):
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
-    manager.state.reset_pattern()
-    manager.state.reset_tip()
+    manager.state.reset('pattern')
+    manager.state.reset('tip')
     if silent:
         return
     await utils.notify_all_channels(manager, "Выдан новый уровень")
@@ -246,9 +248,10 @@ async def _process_next_level(status, manager: Manager, silent=True):
         return
     if status.current_level.question:
         await utils.notify_all_channels(manager, utils.format_level_message(status.current_level.question))
-        schema_url = utils.get_schema_url_or_none(status.current_level.question)
-        if schema_url:
-            await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+        schema_urls = utils.get_schema_urls(status.current_level.question)
+        if len(schema_urls):
+            for schema_url in schema_urls:
+                await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
         else:
             await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
     if status.current_level.locationComment:
@@ -352,6 +355,7 @@ async def get_all_params(message: types.Message, manager: Manager, **kwargs):
     values = asdict(manager.state)
     text = "\n".join(f"{key}: {value}" for key, value in values.items())
     await message.reply(f"Все заданные переменные:\n{text}")
+
 
 async def get_version(message: types.Message, manager: Manager, **kwargs):
     msg = os.environ.get("VERSION", "Не задана")
