@@ -4,6 +4,7 @@ import logging
 import pathlib
 from pewpewbot.screenshot import Screenshoter
 import commands_processing
+from pewpewbot.command_patterns import COMMAND_MANAGER
 from os import path
 from functools import partial
 from logging import config
@@ -13,8 +14,6 @@ from pewpewbot.client import Client
 from pewpewbot.manager import Manager
 from pewpewbot.State import State
 
-# List of TgCommand which are enabled in command_patterns
-ACTIVE_COMMANDS = utils.get_all_active_commands()
 DUMP_CONFIG_TIMEOUT = 30
 
 # Configure logging
@@ -61,14 +60,7 @@ def main():
     # Create dispatcher
     dispatcher = Dispatcher(bot)
 
-    # Register commands in dispatcher
-    for command in ACTIVE_COMMANDS:
-        if command.pattern is not None:
-            kwargs = dict(regexp=command.pattern)
-        else:
-            kwargs = dict(commands=command.names)
-        dispatcher.register_message_handler(partial(command.apply_and_get_awaitable, manager=manager), **kwargs)
-    dispatcher.register_message_handler(partial(commands_processing.process_unknown, manager=manager), **{})
+    COMMAND_MANAGER.register_commands(dispatcher, manager)
 
     # Start polling
     executor.start_polling(dispatcher, skip_updates=True)
