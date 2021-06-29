@@ -1,65 +1,40 @@
 from models import Status, Koline
+from dataclasses import MISSING, dataclass, field
 from pewpewbot import patterns
 
-CODE_CHAT_KEY = 'code_chat_id'
-MAIN_CHAT_KEY = 'main_chat_id'
-DEBUG_CHAT_KEY = 'debug_chat_id'
-ENGINE_TIMEOUT_KEY = 'engine_timeout'
-SCREENSHOT_URL_KEY='screenshot_url'
-SCREENSHOT_TIMEOUT_KEY='screenshot_timeout'
-SCREENSHOT_HEIGHT='screenshot_height'
-SCREENSHOT_WIDTH='screenshot_width'
-DEFAULT_OTHER = {
-    ENGINE_TIMEOUT_KEY: '30',
-    SCREENSHOT_TIMEOUT_KEY: '5',
-    SCREENSHOT_HEIGHT: '1000',
-    SCREENSHOT_WIDTH: '1000',
-}
-
-
-class State(object):
-    def __init__(
-            self,
-            parse_on=False,
-            type_on=False,
-            maps_on=True,
-            tip='',
-            link='',
-            other=None,
-            code_pattern=patterns.STANDARD_CODE_PATTERN,
-            game_status: Status = None,
-            koline: Koline = None
-    ):
-        self.code_pattern = code_pattern
-        self.parse_on = parse_on
-        self.type_on = type_on
-        self.maps_on = maps_on
-        if other is None:
-            self.other = DEFAULT_OTHER
+@dataclass
+class State:
+    parse_on: bool = False
+    type_on: bool = False
+    maps_on: bool = True
+    tip: list = field(default_factory=list) # Should be list[list[str]]
+    link: str = ''
+    code_chat_id: str = None
+    main_chat_id: str = None
+    debug_chat_id: str = None
+    engine_timeout: int = 30
+    screenshot_url: str = None
+    screenshot_timeout: int = 5
+    screenshot_height: int = 1000
+    screenshot_width: int = 1000
+    code_pattern:str = patterns.STANDARD_CODE_PATTERN
+    game_status: Status = None
+    koline: Koline = None
+    
+    def reset(self, field_name):
+        """
+        Resets field to default value.
+        For example, state.reset("parse_on") is equialent to state.parse_on = False
+        """
+        if field_name not in self.__dataclass_fields__:
+            raise ValueError(f"Field {field_name} does not exist in State")
+        field = self.__dataclass_fields__[field_name]
+        if field.default is MISSING and field.default_factory is MISSING:
+            raise ValueError(f"Default value for field {field_name} is not set")
+        if field.default is MISSING:
+            setattr(self, field_name, field.default_factory())
         else:
-            self.other = other
-        self.tip = tip
-        self.link = link
-        self.game_status = game_status
-        self.koline = koline
-
-    def set_parse(self, mode):
-        self.parse_on = mode
-
-    def set_type(self, mode):
-        self.type_on = mode
-
-    def set_maps(self, mode):
-        self.maps_on = mode
-
-    def get_other(self, name):
-        if name in self.other:
-            return self.other[name]
-        else:
-            return "Значение не задано"
-
-    def get_tip(self):
-        return self.tip
+            setattr(self, field_name, field.default)
 
     def set_tip(self, tip):
         sector_tips = [sector_tip.strip() for sector_tip in tip.split("***")]
@@ -67,26 +42,12 @@ class State(object):
         for sector_tip in sector_tips:
             self.tip.append([tip for tip in [raw_tip.strip() for raw_tip in sector_tip.split("\n")] if len(tip)])
 
-    def reset_tip(self):
-        self.tip = ''
-
-    def get_link(self):
-        return self.link
-
-    def set_link(self, link):
-        self.link = link
-
-    def reset_link(self):
-        self.link = ''
-
-    def set_other(self, name, value):
-        self.other[name] = value
-
-    def set_pattern(self, pattern):
-        self.code_pattern = pattern
-
-    def reset_pattern(self):
-        self.code_pattern = patterns.STANDARD_CODE_PATTERN
-
-    def get_pattern(self):
-        return self.code_pattern
+    def __setattr__(self, name, value):
+        if name not in self.__dataclass_fields__:
+            raise AttributeError(f"Attribute {name} does not exist in State")
+        field = self.__dataclass_fields__[name]
+        field_type = field.type
+        if isinstance(value, field_type): # if value type matches field
+            super().__setattr__(name, value)
+        elif field_type is int and isinstance(value, str): # casts str to int
+            super().__setattr__(name, int(value))

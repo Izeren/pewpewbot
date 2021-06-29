@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import datetime
 import logging
 import os
@@ -11,7 +12,6 @@ from aiogram import types, Bot
 import code_utils
 import patterns
 import views
-from State import DEBUG_CHAT_KEY
 from models import Status, Koline, CodeVerdict
 from pewpewbot import utils
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
@@ -27,20 +27,20 @@ async def safe_dzzzr_interaction(fn, bot: Bot, manager: Manager, **kwargs):
         return await fn(bot, manager, **kwargs)
     except AuthenticationError as e:
         logger.error(e)
-        if DEBUG_CHAT_KEY in manager.state.other:
-            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Ошибка аутентификации в движке дозора")
+        if manager.state.debug_chat_id is not None:
+            await bot.send_message(manager.state.debug_chat_id, "Ошибка аутентификации в движке дозора")
     except ConnectionError as e:
         logger.error(e)
-        if DEBUG_CHAT_KEY in manager.state.other:
-            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Ошибка подключения к движку дозора")
+        if manager.state.debug_chat_id is not None:
+            await bot.send_message(manager.state.debug_chat_id, "Ошибка подключения к движку дозора")
     except ValidationError as e:
         logger.error(e)
-        if DEBUG_CHAT_KEY in manager.state.other:
-            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Ошибка валидации ответа")
+        if manager.state.debug_chat_id is not None:
+            await bot.send_message(manager.state.debug_chat_id, "Ошибка валидации ответа")
     except Exception as e:
         logger.error(e)
-        if DEBUG_CHAT_KEY in manager.state.other:
-            await bot.send_message(manager.state.other[DEBUG_CHAT_KEY], "Неожиданное исключение в боте")
+        if manager.state.debug_chat_id is not None:
+            await bot.send_message(manager.state.debug_chat_id, "Неожиданное исключение в боте")
 
 
 async def dummy(message: types.Message, manager: Manager, **kwargs):
@@ -87,10 +87,10 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
 async def process_link(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     if text:
-        manager.state.set_link(text)
+        manager.state.link = text
         await message.reply("Установлена ссылка {}".format(text))
     else:
-        link = manager.state.get_link()
+        link = manager.state.link
         if link:
             await message.reply("Ссылка: {}".format(link))
         else:
@@ -100,13 +100,13 @@ async def process_link(message: types.Message, manager: Manager, **kwargs):
 async def process_tip(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     if text.startswith('clean'):
-        manager.state.reset_tip()
+        manager.state.reset('tip')
         await message.reply("Запиненная подсказка сброшена")
-    if text:
+    elif text:
         manager.state.set_tip(text)
         await message.reply("Подсказка запинена на текущий уровень")
     else:
-        tip_text = manager.state.get_tip()
+        tip_text = manager.state.tip
         if tip_text:
             await message.reply("Запиненная подсказка: {}".format(tip_text))
         else:
@@ -117,14 +117,14 @@ async def process_pattern(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     # 'standar' is for stability to parse both standart and standard
     if 'standar' in text:
-        manager.state.reset_pattern()
+        manager.state.reset('code_pattern')
         await message.reply("Установлен стандартный шаблон кода")
     elif text:
         try:
             re.compile(text)
         except re.error:
             await message.reply("'{}' не является регулярным выражением. Шаблон кода не установлен".format(text))
-        manager.state.set_pattern(text)
+        manager.state.code_pattern = text
         await message.reply("Шаблон кода установлен: {}".format(text))
     else:
         if manager.state.code_pattern:
@@ -134,32 +134,42 @@ async def process_pattern(message: types.Message, manager: Manager, **kwargs):
 
 
 async def process_parse(message: types.Message, manager: Manager, **kwargs):
-    text = utils.trim_command_name(message, kwargs['command_name']).strip()
-    mode = utils.parse_new_mode(text)
-    if mode is None:
-        await message.reply("Неверный режим использования, используйте 'on' или 'off'")
-    else:
-        manager.state.set_parse(mode)
-        await message.reply("Парсинг {}".format("включен" if mode else "выключен"))
+    await process_bool_setting(
+        message=message, 
+        manager=manager, 
+        state_field='parse_on', 
+        desc="Парсинг", 
+        command_name=kwargs['command_name'])
 
 async def process_maps(message: types.Message, manager: Manager, **kwargs):
-    text = utils.trim_command_name(message, kwargs['command_name']).strip()
-    mode = utils.parse_new_mode(text)
-    if mode is None:
-        await message.reply("Неверный режим использования, используйте 'on' или 'off'")
-    else:
-        manager.state.set_maps(mode)
-        await message.reply("Парсинг координат из чата {}".format("включен" if mode else "выключен"))
+    await process_bool_setting(
+        message=message, 
+        manager=manager, 
+        state_field='maps_on', 
+        desc="Парсинг координат из чата", 
+        command_name=kwargs['command_name'])
 
 
 async def process_type(message: types.Message, manager: Manager, **kwargs):
-    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    await process_bool_setting(
+        message=message, 
+        manager=manager, 
+        state_field='type_on', 
+        desc="Автоматический парсинг кодов", 
+        command_name=kwargs['command_name'])
+
+async def process_bool_setting(message: types.Message, manager: Manager, state_field: str, desc: str, command_name:str):
+    """
+    Updates bool settings from message in state.
+    """
+    text = utils.trim_command_name(message, command_name).strip()
     mode = utils.parse_new_mode(text)
     if mode is None:
         await message.reply("Неверный режим использования, используйте 'on' или 'off'")
     else:
-        manager.state.set_type(mode)
-        await message.reply("Автоматический парсинг кодов {}".format(utils.get_text_mode_status(mode)))
+        setattr(manager.state, state_field, mode)
+        await message.reply(f"{desc} {utils.get_text_mode_status(mode)}")
+
 
 
 async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
@@ -228,8 +238,8 @@ async def _process_next_level(status, manager: Manager, silent=True):
             await utils.notify_all_channels(manager, utils.build_pretty_level_question(status.current_level.question))
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
-    manager.state.reset_pattern()
-    manager.state.reset_tip()
+    manager.state.reset('pattern')
+    manager.state.reset('tip')
 
 
 def _update_current_level_info(game_status: Status, manager: Manager):
@@ -301,7 +311,7 @@ async def try_process_coords(message: types.Message, manager: Manager, text: str
 
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
     text = message.text.lower()
-    if re.fullmatch(manager.state.get_pattern(), text) or text.startswith('.'):
+    if re.fullmatch(manager.state.code_pattern, text) or text.startswith('.'):
         await process_code(message, manager)
     elif manager.state.maps_on:
         await try_process_coords(message, manager, text)
@@ -314,11 +324,18 @@ async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs
 async def set_state_key_value(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     key, value = text.split()
-    manager.state.other[key] = value
-    await message.reply("Для переменной {} установлено значение: {}".format(key, value))
+    try:
+        setattr(manager.state, key, value)
+        await message.reply(f"Для переменной {key} установлено значение: {value}")
+    except AttributeError: 
+        await message.reply(f"Переменной {key} не существует")
+    except ValueError: 
+        await message.reply(f"{value} - недопустимое значение для переменной {key}")
 
-async def get_other(message: types.Message, manager: Manager, **kwargs):
-    await message.reply("Установлены дополнительные проперти: {}".format(manager.state.other))
+async def get_all_params(message: types.Message, manager: Manager, **kwargs):
+    values = asdict(manager.state)
+    text = "\n".join(f"{key}: {value}" for key, value in values.items())
+    await message.reply(f"Все заданные переменные:\n{text}")
 
 async def get_version(message: types.Message, manager: Manager, **kwargs):
     msg = os.environ.get("VERSION", "Не задана")

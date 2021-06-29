@@ -3,7 +3,6 @@ import logging
 import re
 
 import patterns
-from State import CODE_CHAT_KEY, MAIN_CHAT_KEY, DEBUG_CHAT_KEY
 from pewpewbot import command_patterns
 from enum import Enum
 from aiogram import types, Bot
@@ -49,17 +48,17 @@ def parse_new_mode(mode):
 
 
 async def notify_all_channels(manager: Manager, message: types.message):
-    if DEBUG_CHAT_KEY in manager.state.other:
-        await manager.bot.send_message(manager.state.other[DEBUG_CHAT_KEY], message, parse_mode='Markdown')
-    if CODE_CHAT_KEY in manager.state.other:
-        await manager.bot.send_message(manager.state.other[CODE_CHAT_KEY], message, parse_mode='Markdown')
-    if MAIN_CHAT_KEY in manager.state.other:
-        await manager.bot.send_message(manager.state.other[MAIN_CHAT_KEY], message, parse_mode='Markdown')
+    if manager.state.debug_chat_id is not None:
+        await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
+    if manager.state.code_chat_id is not None:
+        await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
+    if manager.state.main_chat_id is not None:
+        await manager.bot.send_message(manager.state.main_chat_id, message, parse_mode='Markdown')
 
 
 async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
-    if CODE_CHAT_KEY in manager.state.other:
-        await bot.send_message(manager.state.other[CODE_CHAT_KEY], message, parse_mode='Markdown')
+    if manager.state.code_chat_id is not None:
+        await bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
 
 
 def get_text_mode_status(mode):
@@ -76,7 +75,7 @@ async def repeat_const_delay(delay: int, coro, *args, **kwargs):
         await coro(*args, **kwargs)
         await asyncio.sleep(delay)
 
-# Util for performing periodic tasks. Accepts a manager and key in manager.state.other so that delay can be changed in runtime
+# Util for performing periodic tasks. Accepts a manager and key in manager.state so that delay can be changed in runtime
 async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs):
     while True:
         try:
@@ -84,8 +83,12 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
         except Exception as exc:
             logging.error("Exception in task", exc_info=exc)
         try:
-            await asyncio.sleep(int(manager.state.other[key]))
-        except ValueError:
-            logging.error(f"Key {key} is not found in manager.state.other or is not int. Using 30.")
+            delay = getattr(manager.state, key)
+            if not isinstance(delay, int):
+                logging.error(f"manager.state.{key} is not int. Using 30.")
+                delay = 30
+            await asyncio.sleep(delay)
+        except AttributeError:
+            logging.error(f"Key {key} is not found in manager.state. Using 30.")
             await asyncio.sleep(30)
         

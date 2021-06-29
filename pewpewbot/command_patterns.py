@@ -89,9 +89,9 @@ SET_COMMAND = TgCommand('set', '''
 указывать настраиваемые ключи
 ''', commands_processing.set_state_key_value, True)
 
-GET_COMMAND = TgCommand('get_other', '''
-    /get_other позволяет узнать текущие установленные дополнительные параметры
-''', commands_processing.get_other, True)
+GET_COMMAND = TgCommand('get_params', '''
+    /get_params позволяет узнать все текущие установленные параметры
+''', commands_processing.get_all_params, True)
 
 ST_COMMAND = TgCommand('st', '''
     /st позволяет зафорсить апдейт статуса бота (для дебага, с выводом в чат)
