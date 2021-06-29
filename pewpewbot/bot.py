@@ -56,6 +56,7 @@ def main():
     loop.create_task(utils.repeat_runtime_delay(manager, 'screenshot_timeout', screenshoter.update_screenshot, state))
     loop.create_task(utils.repeat_const_delay(DUMP_CONFIG_TIMEOUT, state.dump_params, state_file_path))
 
+
     # Create dispatcher
     dispatcher = Dispatcher(bot)
 
