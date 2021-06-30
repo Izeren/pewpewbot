@@ -234,24 +234,23 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
         dict_or_url = message.text[3:].strip()
         if not dict_or_url.startswith('{'):
             status_dict = requests.get(dict_or_url).text
-            await message.reply(status_dict)
         else:
             status_dict = dict_or_url
         try:
-            status = StatusSchema(partial=True, unknown=EXCLUDE).load(literal_eval(status_dict))
+            game_status = StatusSchema(partial=True, unknown=EXCLUDE).load(literal_eval(status_dict))
         except Exception as e:
-            status = StatusSchema(partial=True, unknown=EXCLUDE).load({})
+            game_status = StatusSchema(partial=True, unknown=EXCLUDE).load({})
             await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
     else:
-        status = await manager.http_client.status()
-    await message.reply(str(status))
-    await _process_next_level(status, manager)
+        game_status = await manager.http_client.status()
+    await message.reply(str(game_status))
+    await _process_next_level(game_status, manager)
 
 
 async def _process_next_level(status, manager: Manager, silent=True):
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
-    manager.state.reset('pattern')
+    manager.state.reset('code_pattern')
     manager.state.reset('tip')
     if silent:
         return
@@ -278,6 +277,11 @@ async def _process_next_level(status, manager: Manager, silent=True):
 
 def _update_current_level_info(game_status: Status, manager: Manager):
     manager.state.game_status = game_status
+    if not game_status.current_level:
+        logger.info("Level info is empty")
+    elif not game_status.current_level.koline:
+        logger.info("Level with empty koline")
+        return
     try:
         manager.state.koline = Koline.from_string(game_status.current_level.koline)
     except Exception as e:
