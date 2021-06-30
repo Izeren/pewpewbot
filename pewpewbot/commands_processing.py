@@ -231,9 +231,9 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
     if len(message.text) >= len("/st "):
         forced_text_status = message.text[3:]
         try:
-            status = StatusSchema(partial=True, unknown=EXCLUDE).load(forced_text_status)
+            status = StatusSchema(partial=True, unknown=EXCLUDE).load(eval(forced_text_status))
         except Exception as e:
-            status = StatusSchema()
+            status = StatusSchema(partial=True, unknown=EXCLUDE).load({})
             await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
     else:
         status = await manager.http_client.status()
