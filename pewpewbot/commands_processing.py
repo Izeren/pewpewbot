@@ -6,13 +6,14 @@ import re
 import decorator
 import pathlib
 from aiogram.types import InputFile
+from marshmallow import EXCLUDE
 
 from aiogram import types, Bot
 
 import code_utils
 import patterns
 import views
-from models import Status, Koline, CodeVerdict
+from models import Status, Koline, CodeVerdict, StatusSchema
 from pewpewbot import utils
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
@@ -227,7 +228,15 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
 
 @safe_dzzzr_interaction
 async def update_level(message: types.Message, manager: Manager, **kwargs):
-    status = await manager.http_client.status()
+    if len(message.text) >= len("/st "):
+        forced_text_status = message.text[3:]
+        try:
+            status = StatusSchema(partial=True, unknown=EXCLUDE).load(forced_text_status)
+        except Exception as e:
+            status = StatusSchema()
+            await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
+    else:
+        status = await manager.http_client.status()
     await message.reply(str(status))
     await _process_next_level(status, manager)
 
