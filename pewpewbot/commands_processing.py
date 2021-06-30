@@ -1,3 +1,4 @@
+from ast import literal_eval
 from dataclasses import asdict
 import datetime
 import logging
@@ -5,6 +6,7 @@ import os
 import re
 import decorator
 import pathlib
+import requests
 from aiogram.types import InputFile
 from marshmallow import EXCLUDE
 
@@ -229,9 +231,14 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
 @safe_dzzzr_interaction
 async def update_level(message: types.Message, manager: Manager, **kwargs):
     if len(message.text) >= len("/st "):
-        forced_text_status = message.text[3:]
+        dict_or_url = message.text[3:].strip()
+        if not dict_or_url.startswith('{'):
+            status_dict = requests.get(dict_or_url)
+            await message.reply(str(status_dict))
+        else:
+            status_dict = dict_or_url
         try:
-            status = StatusSchema(partial=True, unknown=EXCLUDE).load(eval(forced_text_status))
+            status = StatusSchema(partial=True, unknown=EXCLUDE).load(literal_eval(status_dict))
         except Exception as e:
             status = StatusSchema(partial=True, unknown=EXCLUDE).load({})
             await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
