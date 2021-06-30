@@ -233,8 +233,8 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
     if len(message.text) >= len("/st "):
         dict_or_url = message.text[3:].strip()
         if not dict_or_url.startswith('{'):
-            status_dict = requests.get(dict_or_url)
-            await message.reply(str(status_dict))
+            status_dict = requests.get(dict_or_url).text
+            await message.reply(status_dict)
         else:
             status_dict = dict_or_url
         try:
