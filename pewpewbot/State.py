@@ -13,7 +13,7 @@ class State:
     type_on: bool = False
     maps_on: bool = True
     tip: list = field(default_factory=list)  # Should be list[list[str]]
-    link: str = ""
+    link: str = "http://classic.dzzzr.ru/moscow/go/"
     code_chat_id: str = None
     main_chat_id: str = None
     debug_chat_id: str = None

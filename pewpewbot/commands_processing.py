@@ -77,11 +77,10 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
     koline = await manager.get_or_load_and_parse_koline()
     if not manager.state.tip:
         for sector in koline.sectors:
-            await utils.notify_code_chat(manager.bot, manager, views.sector_default_ko_message(sector, manager.state))
+            await utils.notify_code_chat(manager, views.sector_default_ko_message(sector, manager.state))
     else:
         for sector, sector_tip in zip(koline.sectors, manager.state.tip):
-            await utils.notify_code_chat(manager.bot, manager,
-                                         views.not_taken_with_tips(sector, sector_tip, manager.state))
+            await utils.notify_code_chat(manager, views.not_taken_with_tips(sector, sector_tip, manager.state))
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -270,7 +269,8 @@ async def _process_next_level(status, manager: Manager, silent=True):
                 try:
                     await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
                 except Exception as e:
-                    await utils.notify_code_chat()
+                    await utils.notify_debug_chat(manager, f"Не удалось отправить картинку по адресу {schema_url}")
+                    await utils.notify_debug_chat(manager, e)
         else:
             await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
     if status.current_level.locationComment:
