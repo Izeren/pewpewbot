@@ -83,6 +83,15 @@ COMMAND_MANAGER.add_commands(
         enabled=True,
     ),
     TgCommand(
+        names="pin_chat",
+        help_text="""
+        /pin_chat - используется с одним из аргументов: main, code, debug. Устанавливает chat_id из которого было 
+        отправлено сообщение и ставит в соответствие необходимому параметру: main_chat_id/code_chat_id/debug_chat_id
+        """,
+        awaitable_action_method=commands_processing.pin_chat,
+        enabled=True,
+    ),
+    TgCommand(
         names="parse",
         help_text="""
         /parse - парсинг движка дозора, /parse on, /parse off для переключения режима. /status, чтобы узнать,
@@ -153,6 +162,15 @@ COMMAND_MANAGER.add_commands(
         указывать настраиваемые ключи
         """,
         awaitable_action_method=commands_processing.set_state_key_value,
+        enabled=True,
+    ),
+    TgCommand(
+        names="reset",
+        help_text="""
+        /reset позволяет сбросить все параметры статуса бота в стандартные значения. Для сброса конкретного параметра
+        нужно использовать /reset key. 
+        """,
+        awaitable_action_method=commands_processing.reset_to_default,
         enabled=True,
     ),
     TgCommand(

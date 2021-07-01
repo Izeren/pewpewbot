@@ -13,21 +13,21 @@ class State:
     type_on: bool = False
     maps_on: bool = True
     tip: list = field(default_factory=list)  # Should be list[list[str]]
-    link: str = ""
-    code_chat_id: str = None
-    main_chat_id: str = None
-    debug_chat_id: str = None
+    link: str = "http://classic.dzzzr.ru/moscow/go/"
+    code_chat_id: str = field(default=None)
+    main_chat_id: str = field(default=None)
+    debug_chat_id: str = field(default=None)
     engine_timeout: int = 30
-    screenshot_url: str = None
+    screenshot_url: str = field(default=None)
     screenshot_timeout: int = 5
     screenshot_height: int = 1000
     screenshot_width: int = 1000
     code_pattern: str = patterns.STANDARD_CODE_PATTERN
-    game_status: Status = None
-    koline: Koline = None
+    game_status: Status = field(default=None)
+    koline: Koline = field(default=None)
 
     async def dump_params(
-        self, file_path: Path, ignore_fields: list = ["game_status", "koline"]
+            self, file_path: Path, ignore_fields: list = ["game_status", "koline"]
     ):
         params_dict = asdict(self)
         for key in ignore_fields:
@@ -46,7 +46,6 @@ class State:
                 pass
         logging.info(f"Parameters loaded from {file_path}")
 
-
     def reset(self, field_name):
         """
         Resets field to default value.
@@ -61,6 +60,13 @@ class State:
             setattr(self, field_name, field.default_factory())
         else:
             setattr(self, field_name, field.default)
+
+    def reset_all(self):
+        """
+        Resets all fields to default values.
+        """
+        for field_name in self.__dataclass_fields__:
+            self.reset(field_name)
 
     def set_tip(self, tip):
         sector_tips = [sector_tip.strip() for sector_tip in tip.split("***")]
@@ -79,7 +85,7 @@ class State:
             raise AttributeError(f"Attribute {name} does not exist in State")
         field = self.__dataclass_fields__[name]
         field_type = field.type
-        if isinstance(value, field_type):  # if value type matches field
+        if isinstance(value, field_type) or value is None:  # if value type matches field
             super().__setattr__(name, value)
         elif field_type is int and isinstance(value, str):  # casts str to int
             super().__setattr__(name, int(value))

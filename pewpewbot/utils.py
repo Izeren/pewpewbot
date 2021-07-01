@@ -72,9 +72,14 @@ async def image_to_all_channels(manager: Manager, message: types.message, link: 
         await manager.bot.send_photo(manager.state.main_chat_id, link, message, parse_mode='Markdown')
 
 
-async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
+async def notify_code_chat(manager: Manager, message: types.message):
     if manager.state.code_chat_id is not None:
-        await bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
+        await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
+
+
+async def notify_debug_chat(manager: Manager, message: types.message):
+    if manager.state.debug_chat_id is not None:
+        await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
 
 
 def get_text_mode_status(mode):
@@ -110,5 +115,5 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
 
 
 def get_schema_urls(level_message):
-    links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message.lower())
+    links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message)
     return tuple(DZZZR_UPLOADED_FILES_LINK + link for link in links)

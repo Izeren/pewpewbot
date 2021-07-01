@@ -1,3 +1,4 @@
+from ast import literal_eval
 from dataclasses import asdict
 import datetime
 import logging
@@ -5,14 +6,16 @@ import os
 import re
 import decorator
 import pathlib
+import requests
 from aiogram.types import InputFile
+from marshmallow import EXCLUDE
 
 from aiogram import types, Bot
 
 import code_utils
 import patterns
 import views
-from models import Status, Koline, CodeVerdict
+from models import Status, Koline, CodeVerdict, StatusSchema
 from pewpewbot import utils
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
@@ -74,11 +77,10 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
     koline = await manager.get_or_load_and_parse_koline()
     if not manager.state.tip:
         for sector in koline.sectors:
-            await utils.notify_code_chat(manager.bot, manager, views.sector_default_ko_message(sector, manager.state))
+            await utils.notify_code_chat(manager, views.sector_default_ko_message(sector, manager.state))
     else:
         for sector, sector_tip in zip(koline.sectors, manager.state.tip):
-            await utils.notify_code_chat(manager.bot, manager,
-                                         views.not_taken_with_tips(sector, sector_tip, manager.state))
+            await utils.notify_code_chat(manager, views.not_taken_with_tips(sector, sector_tip, manager.state))
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -187,7 +189,7 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
 
 async def task(message: types.Message, manager: Manager, **kwargs):
     if manager.state and manager.state.game_status and manager.state.game_status.current_level:
-        await message.reply(utils.build_pretty_level_question(manager.state.game_status.current_level.question),
+        await message.reply(utils.format_level_message(manager.state.game_status.current_level.question),
                             parse_mode='Markdown')
 
 
@@ -227,15 +229,28 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
 
 @safe_dzzzr_interaction
 async def update_level(message: types.Message, manager: Manager, **kwargs):
-    status = await manager.http_client.status()
-    await message.reply(str(status))
-    await _process_next_level(status, manager)
+    if len(message.text) >= len("/st "):
+        dict_or_url = message.text[3:].strip()
+        if not dict_or_url.startswith('{'):
+            status_dict = requests.get(dict_or_url).text
+        else:
+            status_dict = dict_or_url
+        try:
+            game_status = StatusSchema(partial=True, unknown=EXCLUDE).load(literal_eval(status_dict))
+        except Exception as e:
+            game_status = StatusSchema(partial=True, unknown=EXCLUDE).load({})
+            await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
+    else:
+        game_status = await manager.http_client.status()
+    # TODO: to be solved properly in issue #32
+    await message.reply(str(game_status)[:4000])
+    await update_level_status(manager.bot, manager, **{'game_status': game_status})
 
 
 async def _process_next_level(status, manager: Manager, silent=True):
     manager.logger.info("New game status from site {} ".format(status))
     _update_current_level_info(status, manager)
-    manager.state.reset('pattern')
+    manager.state.reset('code_pattern')
     manager.state.reset('tip')
     if silent:
         return
@@ -251,7 +266,11 @@ async def _process_next_level(status, manager: Manager, silent=True):
         schema_urls = utils.get_schema_urls(status.current_level.question)
         if len(schema_urls):
             for schema_url in schema_urls:
-                await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+                try:
+                    await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+                except Exception as e:
+                    await utils.notify_debug_chat(manager, f"Не удалось отправить картинку по адресу {schema_url}")
+                    await utils.notify_debug_chat(manager, e)
         else:
             await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
     if status.current_level.locationComment:
@@ -262,6 +281,12 @@ async def _process_next_level(status, manager: Manager, silent=True):
 
 def _update_current_level_info(game_status: Status, manager: Manager):
     manager.state.game_status = game_status
+    if not game_status.current_level:
+        logger.info("Level info is empty")
+        return
+    if not game_status.current_level.koline:
+        logger.info("Level with empty koline")
+        return
     try:
         manager.state.koline = Koline.from_string(game_status.current_level.koline)
     except Exception as e:
@@ -301,15 +326,21 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
 
 @safe_dzzzr_interaction
 async def update_level_status(bot: Bot, manager: Manager, **kwargs):
-    if manager.state.parse_on:
+    forced_update = 'game_status' in kwargs
+    game_status = None
+    if forced_update:
+        game_status = kwargs['game_status']
+    elif manager.state.parse_on:
         game_status = await manager.http_client.status()
-        current_level_id = game_status.current_level.levelNumber
-        if not manager.state.game_status:
-            return await _process_next_level(game_status, manager)
-        if manager.state.game_status.current_level.levelNumber != current_level_id:
-            return await _process_next_level(game_status, manager, silent=False)
-        else:
-            return _update_current_level_info(game_status, manager)
+    if not game_status or not game_status.current_level:
+        return
+    current_level_id = game_status.current_level.levelNumber
+    # To avoid dummy messages to the chats on the bot or game startup
+    if not manager.state.game_status:
+        return await _process_next_level(game_status, manager)
+    if manager.state.game_status.current_level.levelNumber != current_level_id:
+        return await _process_next_level(game_status, manager, silent=False)
+    return _update_current_level_info(game_status, manager)
 
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):
@@ -339,6 +370,20 @@ async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs
     await message.reply("chat id: {}".format(message.chat.id))
 
 
+async def pin_chat(message: types.Message, manager: Manager, **kwargs):
+    if 'main' in message.text:
+        setattr(manager.state, 'main_chat_id', str(message.chat.id))
+        await message.reply("Установлен чат для организационной информации")
+    elif 'code' in message.text:
+        setattr(manager.state, 'code_chat_id', str(message.chat.id))
+        await message.reply("Установлен чат для ввода кодов и штабных трансляций")
+    elif 'debug' in message.text:
+        setattr(manager.state, 'debug_chat_id', str(message.chat.id))
+        await message.reply("Установлен чат для дебажных отчетов")
+    else:
+        await message.reply("Используйте один из допустимых аргументов: main, code, debug")
+
+
 async def set_state_key_value(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     key, value = text.split()
@@ -354,9 +399,23 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
 async def get_all_params(message: types.Message, manager: Manager, **kwargs):
     values = asdict(manager.state)
     text = "\n".join(f"{key}: {value}" for key, value in values.items())
-    await message.reply(f"Все заданные переменные:\n{text}")
+    # TODO: to be solved properly in issue #32
+    await message.reply(f"Все заданные переменные:\n{text[:4000]}")
 
 
 async def get_version(message: types.Message, manager: Manager, **kwargs):
     msg = os.environ.get("VERSION", "Не задана")
     await message.reply(f"Версия бота: {msg}")
+
+
+async def reset_to_default(message: types.Message, manager: Manager, **kwargs):
+    key = utils.trim_command_name(message, kwargs['command_name']).strip()
+    if len(key):
+        try:
+            manager.state.reset(key)
+            await message.reply(f"Для переменной {key} установлено значение: {getattr(manager.state, key)}")
+        except AttributeError:
+            await message.reply(f"Переменной {key} не существует")
+    else:
+        manager.state.reset_all()
+        await message.reply("Выполнен сброс к заводским настройкам")

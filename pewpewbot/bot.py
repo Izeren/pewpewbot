@@ -6,7 +6,6 @@ from pewpewbot.screenshot import Screenshoter
 import commands_processing
 from pewpewbot.command_patterns import COMMAND_MANAGER
 from os import path
-from functools import partial
 from logging import config
 from aiogram import Bot, Dispatcher, executor
 from pewpewbot import utils
@@ -43,19 +42,18 @@ def main():
         try:
             state.load_params(state_file_path)
         except Exception as exc:
-            logger.warn("Failed to load params", exc_info=exc)
-    screenshoter = Screenshoter(loop=loop) # Can use separate loop here
+            logger.warning("Failed to load params", exc_info=exc)
+    screenshoter = Screenshoter(loop=loop)  # Can use separate loop here
     manager = Manager(state, Client(), screenshoter, bot, logging.getLogger(Manager.__name__))
     try:
         asyncio.ensure_future(manager.http_client.log_in(login, password), loop=loop)
     except Exception as e:
         logging.error("Failed to login")
 
-
-    loop.create_task(utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
+    loop.create_task(
+        utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
     loop.create_task(utils.repeat_runtime_delay(manager, 'screenshot_timeout', screenshoter.update_screenshot, state))
     loop.create_task(utils.repeat_const_delay(DUMP_CONFIG_TIMEOUT, state.dump_params, state_file_path))
-
 
     # Create dispatcher
     dispatcher = Dispatcher(bot)
