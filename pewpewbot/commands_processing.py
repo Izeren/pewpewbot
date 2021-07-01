@@ -244,7 +244,7 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
     else:
         game_status = await manager.http_client.status()
     await message.reply(str(game_status))
-    await update_level_status(manager.bot, manager, game_status)
+    await update_level_status(manager.bot, manager, **{'game_status': game_status})
 
 
 async def _process_next_level(status, manager: Manager, silent=True):
@@ -321,10 +321,11 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
 
 
 @safe_dzzzr_interaction
-async def update_level_status(bot: Bot, manager: Manager, game_status: Status = None, **kwargs):
-    forced_update = game_status is not None
+async def update_level_status(bot: Bot, manager: Manager, **kwargs):
+    forced_update = 'game_status' in kwargs
+    game_status = kwargs['game_status']
     if manager.state.parse_on or forced_update:
-        if not game_status:
+        if not forced_update:
             game_status = await manager.http_client.status()
         current_level_id = game_status.current_level.levelNumber
         if not manager.state.game_status:
