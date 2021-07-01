@@ -406,7 +406,7 @@ async def get_version(message: types.Message, manager: Manager, **kwargs):
     await message.reply(f"Версия бота: {msg}")
 
 
-def reset_default(message: types.Message, manager: Manager, **kwargs):
+def reset_to_default(message: types.Message, manager: Manager, **kwargs):
     key = utils.trim_command_name(message, kwargs['command_name']).strip()
     if len(key):
         try:

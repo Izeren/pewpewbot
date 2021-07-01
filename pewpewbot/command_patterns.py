@@ -170,7 +170,7 @@ COMMAND_MANAGER.add_commands(
         /reset позволяет сбросить все параметры статуса бота в стандартные значения. Для сброса конкретного параметра
         нужно использовать /reset key. 
         """,
-        awaitable_action_method=commands_processing.reset_default,
+        awaitable_action_method=commands_processing.reset_to_default,
         enabled=True,
     ),
     TgCommand(
