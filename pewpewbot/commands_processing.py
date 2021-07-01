@@ -372,14 +372,16 @@ async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs
 
 async def pin_chat(message: types.Message, manager: Manager, **kwargs):
     if 'main' in message.text:
-        manager.state.main_chat_id = message.chat.id
+        setattr(manager.state, 'main_chat_id', str(message.chat.id))
         await message.reply("Установлен чат для организационной информации")
     elif 'code' in message.text:
-        manager.state.code_chat_id = message.chat.id
+        setattr(manager.state, 'code_chat_id', str(message.chat.id))
         await message.reply("Установлен чат для ввода кодов и штабных трансляций")
     elif 'debug' in message.text:
-        manager.state.debug_chat_id = message.chat.id
+        setattr(manager.state, 'debug_chat_id', str(message.chat.id))
         await message.reply("Установлен чат для дебажных отчетов")
+    else:
+        await message.reply("Используйте один из допустимых аргументов: main, code, debug")
 
 
 async def set_state_key_value(message: types.Message, manager: Manager, **kwargs):
