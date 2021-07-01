@@ -190,7 +190,7 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
 
 async def task(message: types.Message, manager: Manager, **kwargs):
     if manager.state and manager.state.game_status and manager.state.game_status.current_level:
-        await message.reply(utils.build_pretty_level_question(manager.state.game_status.current_level.question),
+        await message.reply(utils.format_level_message(manager.state.game_status.current_level.question),
                             parse_mode='Markdown')
 
 
@@ -244,7 +244,7 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
     else:
         game_status = await manager.http_client.status()
     await message.reply(str(game_status))
-    await _process_next_level(game_status, manager)
+    await update_level_status(manager.bot, manager, game_status)
 
 
 async def _process_next_level(status, manager: Manager, silent=True):
@@ -279,7 +279,8 @@ def _update_current_level_info(game_status: Status, manager: Manager):
     manager.state.game_status = game_status
     if not game_status.current_level:
         logger.info("Level info is empty")
-    elif not game_status.current_level.koline:
+        return
+    if not game_status.current_level.koline:
         logger.info("Level with empty koline")
         return
     try:
@@ -320,9 +321,11 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
 
 
 @safe_dzzzr_interaction
-async def update_level_status(bot: Bot, manager: Manager, **kwargs):
-    if manager.state.parse_on:
-        game_status = await manager.http_client.status()
+async def update_level_status(bot: Bot, manager: Manager, game_status: Status = None, **kwargs):
+    forced_update = game_status is not None
+    if manager.state.parse_on or forced_update:
+        if not game_status:
+            game_status = await manager.http_client.status()
         current_level_id = game_status.current_level.levelNumber
         if not manager.state.game_status:
             return await _process_next_level(game_status, manager)
