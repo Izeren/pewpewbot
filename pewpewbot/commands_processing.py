@@ -323,17 +323,20 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
 @safe_dzzzr_interaction
 async def update_level_status(bot: Bot, manager: Manager, **kwargs):
     forced_update = 'game_status' in kwargs
-    game_status = kwargs['game_status']
-    if manager.state.parse_on or forced_update:
-        if not forced_update:
-            game_status = await manager.http_client.status()
-        current_level_id = game_status.current_level.levelNumber
-        if not manager.state.game_status:
-            return await _process_next_level(game_status, manager)
-        if manager.state.game_status.current_level.levelNumber != current_level_id:
-            return await _process_next_level(game_status, manager, silent=False)
-        else:
-            return _update_current_level_info(game_status, manager)
+    game_status = None
+    if forced_update:
+        game_status = kwargs['game_status']
+    elif manager.state.parse_on:
+        game_status = await manager.http_client.status()
+    if not game_status or not game_status.current_level:
+        return
+    current_level_id = game_status.current_level.levelNumber
+    # To avoid dummy messages to the chats on the bot or game startup
+    if not manager.state.game_status:
+        return await _process_next_level(game_status, manager)
+    if manager.state.game_status.current_level.levelNumber != current_level_id:
+        return await _process_next_level(game_status, manager, silent=False)
+    return _update_current_level_info(game_status, manager)
 
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):
