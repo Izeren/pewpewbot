@@ -14,17 +14,17 @@ class State:
     maps_on: bool = True
     tip: list = field(default_factory=list)  # Should be list[list[str]]
     link: str = "http://classic.dzzzr.ru/moscow/go/"
-    code_chat_id: str = None
-    main_chat_id: str = None
-    debug_chat_id: str = None
+    code_chat_id: str = field(default=None)
+    main_chat_id: str = field(default=None)
+    debug_chat_id: str = field(default=None)
     engine_timeout: int = 30
-    screenshot_url: str = None
+    screenshot_url: str = field(default=None)
     screenshot_timeout: int = 5
     screenshot_height: int = 1000
     screenshot_width: int = 1000
     code_pattern: str = patterns.STANDARD_CODE_PATTERN
-    game_status: Status = None
-    koline: Koline = None
+    game_status: Status = field(default=None)
+    koline: Koline = field(default=None)
 
     async def dump_params(
             self, file_path: Path, ignore_fields: list = ["game_status", "koline"]
