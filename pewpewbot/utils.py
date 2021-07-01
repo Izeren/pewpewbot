@@ -77,6 +77,11 @@ async def notify_code_chat(bot: Bot, manager: Manager, message: types.message):
         await bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
 
 
+async def notify_debug_chat(bot: Bot, manager: Manager, message: types.message):
+    if manager.state.debug_chat_id is not None:
+        await bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
+
+
 def get_text_mode_status(mode):
     return "включен" if mode else "выключен"
 

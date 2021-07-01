@@ -267,7 +267,10 @@ async def _process_next_level(status, manager: Manager, silent=True):
         schema_urls = utils.get_schema_urls(status.current_level.question)
         if len(schema_urls):
             for schema_url in schema_urls:
-                await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+                try:
+                    await utils.image_to_all_channels(manager, "Схема захода: \n", schema_url)
+                except Exception as e:
+                    await utils.notify_code_chat()
         else:
             await utils.notify_all_channels(manager, "Схема захода: Не удалось распарсить")
     if status.current_level.locationComment:
@@ -365,6 +368,18 @@ async def process_unknown(message: types.Message, manager: Manager, **kwargs):
 
 async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs):
     await message.reply("chat id: {}".format(message.chat.id))
+
+
+async def pin_chat(message: types.Message, manager: Manager, **kwargs):
+    if 'main' in message.text:
+        manager.state.main_chat_id = message.chat.id
+        await message.reply("Установлен чат для организационной информации")
+    elif 'code' in message.text:
+        manager.state.code_chat_id = message.chat.id
+        await message.reply("Установлен чат для ввода кодов и штабных трансляций")
+    elif 'debug' in message.text:
+        manager.state.debug_chat_id = message.chat.id
+        await message.reply("Установлен чат для дебажных отчетов")
 
 
 async def set_state_key_value(message: types.Message, manager: Manager, **kwargs):
