@@ -404,3 +404,15 @@ async def get_all_params(message: types.Message, manager: Manager, **kwargs):
 async def get_version(message: types.Message, manager: Manager, **kwargs):
     msg = os.environ.get("VERSION", "Не задана")
     await message.reply(f"Версия бота: {msg}")
+
+
+def reset_default(message: types.Message, manager: Manager, **kwargs):
+    key = utils.trim_command_name(message, kwargs['command_name']).strip()
+    if len(key):
+        try:
+            manager.state.reset(key)
+            await message.reply(f"Для переменной {key} установлено значение: {getattr(manager.state, key)}")
+        except AttributeError:
+            await message.reply(f"Переменной {key} не существует")
+    else:
+        manager.state.reset_all()

@@ -27,7 +27,7 @@ class State:
     koline: Koline = None
 
     async def dump_params(
-        self, file_path: Path, ignore_fields: list = ["game_status", "koline"]
+            self, file_path: Path, ignore_fields: list = ["game_status", "koline"]
     ):
         params_dict = asdict(self)
         for key in ignore_fields:
@@ -46,7 +46,6 @@ class State:
                 pass
         logging.info(f"Parameters loaded from {file_path}")
 
-
     def reset(self, field_name):
         """
         Resets field to default value.
@@ -61,6 +60,13 @@ class State:
             setattr(self, field_name, field.default_factory())
         else:
             setattr(self, field_name, field.default)
+
+    def reset_all(self):
+        """
+        Resets all fields to default values.
+        """
+        for field_name in self.__dataclass_fields__:
+            self.reset(field_name)
 
     def set_tip(self, tip):
         sector_tips = [sector_tip.strip() for sector_tip in tip.split("***")]
