@@ -416,3 +416,4 @@ async def reset_to_default(message: types.Message, manager: Manager, **kwargs):
             await message.reply(f"Переменной {key} не существует")
     else:
         manager.state.reset_all()
+        await message.reply("Выполнен сброс к заводским настройкам")
