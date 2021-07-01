@@ -243,7 +243,8 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
             await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
     else:
         game_status = await manager.http_client.status()
-    await message.reply(str(game_status))
+    # TODO: to be solved properly in issue #32
+    await message.reply(str(game_status)[:4000])
     await update_level_status(manager.bot, manager, **{'game_status': game_status})
 
 
@@ -381,7 +382,8 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
 async def get_all_params(message: types.Message, manager: Manager, **kwargs):
     values = asdict(manager.state)
     text = "\n".join(f"{key}: {value}" for key, value in values.items())
-    await message.reply(f"Все заданные переменные:\n{text}")
+    # TODO: to be solved properly in issue #32
+    await message.reply(f"Все заданные переменные:\n{text[:4000]}")
 
 
 async def get_version(message: types.Message, manager: Manager, **kwargs):
