@@ -85,7 +85,7 @@ class State:
             raise AttributeError(f"Attribute {name} does not exist in State")
         field = self.__dataclass_fields__[name]
         field_type = field.type
-        if isinstance(value, field_type):  # if value type matches field
+        if isinstance(value, field_type) or value is None:  # if value type matches field
             super().__setattr__(name, value)
         elif field_type is int and isinstance(value, str):  # casts str to int
             super().__setattr__(name, int(value))
