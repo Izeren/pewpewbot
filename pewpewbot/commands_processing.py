@@ -215,16 +215,16 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
     code_result = await manager.http_client.post_code(text)
     if isinstance(code_result.verdict, int):
         return await message.reply(code_result.comment)
+    if code_result.verdict.value not in code_utils.GOOD_VERDICTS:
+        return await message.reply(code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value])
     else:
+        if code_result.verdict.value == CodeVerdict.ACCEPTED_NEXT_LEVEL.value:
+            await utils.notify_all_channels(manager, "Взят последний код на уровне")
+            return await update_level_status(manager.bot, manager)
+        await _update_current_level_info_on_code(
+            code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
         if code_result.verdict.value in code_utils.ACCEPTED_VERDICTS:
             await send_ko(message, manager, **kwargs)
-        if code_result.verdict.value not in code_utils.GOOD_VERDICTS:
-            return await message.reply(code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value])
-        else:
-            if code_result.verdict.value == CodeVerdict.ACCEPTED_NEXT_LEVEL.value:
-                return await utils.notify_all_channels(manager, "Взят последний код на уровне")
-            return await _update_current_level_info_on_code(
-                code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
 
 
 @safe_dzzzr_interaction
