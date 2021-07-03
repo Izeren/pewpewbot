@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import logging
 from pathlib import Path
-from models import Status, Koline
+from pewpewbot.models import Status, Koline
 from dataclasses import MISSING, asdict, dataclass, field
 from pewpewbot import patterns
 
