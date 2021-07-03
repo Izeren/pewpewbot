@@ -3,7 +3,7 @@ from logging import Logger
 
 from aiogram import Bot
 
-from models import Koline
+from pewpewbot.models import Koline
 from pewpewbot.State import State
 from pewpewbot.client import Client
 from pewpewbot.screenshot import Screenshoter

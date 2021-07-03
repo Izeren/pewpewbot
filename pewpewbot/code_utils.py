@@ -1,4 +1,4 @@
-from models import CodeVerdict
+from pewpewbot.models import CodeVerdict
 
 CODE_VERDICT_TO_MESSAGE = {
     CodeVerdict.ACCEPTED.value: "Код принят",

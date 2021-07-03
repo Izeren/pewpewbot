@@ -15,7 +15,7 @@ from aiogram import types, Bot
 import code_utils
 import patterns
 import views
-from models import Status, Koline, CodeVerdict, StatusSchema
+from pewpewbot.models import Status, Koline, CodeVerdict, StatusSchema
 from pewpewbot import utils
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager

@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from State import State
-from models import Sector, ParsedCode
+from pewpewbot.models import Sector, ParsedCode
 
 
 def get_tm_safe(state: State):
