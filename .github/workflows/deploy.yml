@@ -46,6 +46,7 @@ jobs:
           docker volume create logs && \
           docker volume create config && \ 
           docker run \
+          --log-opt max-size=100m \
           --name pewpewbot_gh_action \
           -e API_TOKEN=${{ secrets.API_TOKEN }} \
           -e LOGIN=${{ secrets.LOGIN }} \
