@@ -213,6 +213,6 @@ COMMAND_MANAGER.add_commands(
     """,
         awaitable_action_method=commands_processing.list_sectors,
         enabled=True,
-        pattern=r"/ ",
+        pattern=r"/sectors",
     ),
 )
