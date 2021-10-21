@@ -227,6 +227,10 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
             await send_ko(message, manager, **kwargs)
 
 
+async def list_sectors(message: types.Message, manager: Manager, **kwargs):
+    return await message.reply(views.get_sectors_list(manager.state.koline), parse_mode='Markdown')
+
+
 @safe_dzzzr_interaction
 async def update_level(message: types.Message, manager: Manager, **kwargs):
     status_ref = utils.trim_command_name(message, kwargs['command_name'])

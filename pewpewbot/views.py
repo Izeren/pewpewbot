@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from State import State
-from pewpewbot.models import Sector, ParsedCode
+from pewpewbot.models import Sector, ParsedCode, Koline
 
 
 def get_tm_safe(state: State):
@@ -9,6 +9,7 @@ def get_tm_safe(state: State):
         return state.game_status.current_level.tm
     else:
         return None
+
 
 def sector_default_ko_message(sector: Sector, state: State):
     """
@@ -71,3 +72,14 @@ def not_taken_with_tips(sector, tips, state: State):
     result += "```"
 
     return result
+
+
+def get_sectors_list(koline: Koline) -> str:
+    """
+    :param koline: принимает экземпляр класса Koline
+    :return: сообщение с пронумерованным списком секторов
+    """
+    message = ""
+    for sector_id, sector in enumerate(koline.sectors):
+        message += f"{sector_id + 1}: *{sector.name}*\n"
+    return message

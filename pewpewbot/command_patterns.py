@@ -206,4 +206,13 @@ COMMAND_MANAGER.add_commands(
         enabled=True,
         pattern=r"/ ",
     ),
+    TgCommand(
+        names="",
+        help_text="""
+        Используйте "/sectors", чтобы получить пронумерованный список секторов
+    """,
+        awaitable_action_method=commands_processing.list_sectors,
+        enabled=True,
+        pattern=r"/ ",
+    ),
 )
