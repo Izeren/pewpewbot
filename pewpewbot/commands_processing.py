@@ -29,19 +29,19 @@ async def safe_dzzzr_interaction(fn, bot: Bot, manager: Manager, **kwargs):
     try:
         return await fn(bot, manager, **kwargs)
     except AuthenticationError as e:
-        logger.error(e)
+        logger.exception(e)
         if manager.state.debug_chat_id is not None:
             await bot.send_message(manager.state.debug_chat_id, "Ошибка аутентификации в движке дозора")
     except ConnectionError as e:
-        logger.error(e)
+        logger.exception(e)
         if manager.state.debug_chat_id is not None:
             await bot.send_message(manager.state.debug_chat_id, "Ошибка подключения к движку дозора")
     except ValidationError as e:
-        logger.error(e)
+        logger.exception(e)
         if manager.state.debug_chat_id is not None:
             await bot.send_message(manager.state.debug_chat_id, "Ошибка валидации ответа")
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         if manager.state.debug_chat_id is not None:
             await bot.send_message(manager.state.debug_chat_id, "Неожиданное исключение в боте")
 
