@@ -81,5 +81,5 @@ def get_sectors_list(koline: Koline) -> str:
     """
     message = ""
     for sector_id, sector in enumerate(koline.sectors):
-        message += f"{sector_id + 1}: *{sector.name}*\n"
+        message += f"{sector_id}: *{sector.name}*\n"
     return message
