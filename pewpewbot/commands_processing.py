@@ -118,7 +118,7 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
                 if sector_id >= len(manager.state.koline.sectors):
                     await message.reply(f"Сектора под номером: {sector_id} не существует")
                     raise Exception("В качестве номера сектора может быть: '*' / 'all' / '' / int_sector_id")
-                manager.state.set_tip_for_sector(sector_id, tip)
+                manager.state.set_tip_for_sector(tip, sector_id)
             except Exception as e:
                 await message.reply("Возникла ошибка, не удалось запиить подсказку")
                 raise e
