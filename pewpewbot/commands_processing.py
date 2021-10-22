@@ -103,7 +103,7 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
         manager.state.reset('tip')
         await message.reply("Запиненная подсказка сброшена")
     elif text:
-        sector, tip = text.split(max_split=1)
+        sector, tip = text.split(maxsplit=1)
         sector = sector.strip()
         if sector == '*' or sector == 'all' or sector == '':
             manager.state.set_tip_all_sectors(tip)
