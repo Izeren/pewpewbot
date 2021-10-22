@@ -102,8 +102,21 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
         manager.state.reset('tip')
         await message.reply("Запиненная подсказка сброшена")
     elif text:
-        manager.state.set_tip(text)
-        await message.reply("Подсказка запинена на текущий уровень")
+        sector, tip = text.split(max_split=1)
+        sector = sector.strip()
+        if sector == '*' or sector == 'all' or sector == '':
+            manager.state.set_tip_all_sectors(tip)
+            await message.reply("Подсказка запинена на текущий уровень")
+        else:
+            try:
+                sector_id = int(sector)
+                if sector_id >= len(manager.state.koline.sectors):
+                    await message.reply(f"Sector with id: {sector_id} does not exist")
+                    raise Exception("Bad sector_id provided: use '*' / 'all' / '' / int_sector_id")
+                manager.state.set_tip_for_sector(sector_id, tip)
+            except Exception as e:
+                await message.reply("Pin tip failed, see logs for details")
+                raise e
     else:
         tip_text = manager.state.tip
         if tip_text:

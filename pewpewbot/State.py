@@ -68,7 +68,7 @@ class State:
         for field_name in self.__dataclass_fields__:
             self.reset(field_name)
 
-    def set_tip(self, tip):
+    def set_tip_all_sectors(self, tip):
         sector_tips = [sector_tip.strip() for sector_tip in tip.split("***")]
         self.tip = []
         for sector_tip in sector_tips:
@@ -79,6 +79,12 @@ class State:
                     if len(tip)
                 ]
             )
+
+    def set_tip_for_sector(self, tip, sector_id):
+        if sector_id > len(tip):
+            raise Exception("Sector id > total number of sectors")
+        sector_tip = tip
+        self.tip[sector_id] = [tip for tip in [raw_tip.strip() for raw_tip in sector_tip.split("\n")] if len(tip)]
 
     def __setattr__(self, name, value):
         if name not in self.__dataclass_fields__:
