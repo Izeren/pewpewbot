@@ -96,6 +96,7 @@ async def process_link(message: types.Message, manager: Manager, **kwargs):
             await message.reply("Настройки ссылки не найдено")
 
 
+@safe_dzzzr_interaction
 async def process_tip(message: types.Message, manager: Manager, **kwargs):
     text = utils.trim_command_name(message, kwargs['command_name']).strip()
     if text.startswith('clean'):
