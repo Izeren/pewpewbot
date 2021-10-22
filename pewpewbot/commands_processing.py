@@ -103,8 +103,12 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
         manager.state.reset('tip')
         await message.reply("Запиненная подсказка сброшена")
     elif text:
-        sector, tip = text.split(maxsplit=1)
-        sector = sector.strip()
+        try:
+            sector, tip = text.split(maxsplit=1)
+            sector = sector.strip()
+        except Exception as e:
+            await message.reply("Неверный формат шаблона номера сектора '*' / 'all' / '' / 0-xx")
+            raise Exception("Недостаточно данных для парсинга номера сектора и подсказки")
         if sector == '*' or sector == 'all' or sector == '':
             manager.state.set_tip_all_sectors(tip)
             await message.reply("Подсказка запинена на текущий уровень")
@@ -112,11 +116,11 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
             try:
                 sector_id = int(sector)
                 if sector_id >= len(manager.state.koline.sectors):
-                    await message.reply(f"Sector with id: {sector_id} does not exist")
-                    raise Exception("Bad sector_id provided: use '*' / 'all' / '' / int_sector_id")
+                    await message.reply(f"Сектора под номером: {sector_id} не существует")
+                    raise Exception("В качестве номера сектора может быть: '*' / 'all' / '' / int_sector_id")
                 manager.state.set_tip_for_sector(sector_id, tip)
             except Exception as e:
-                await message.reply("Pin tip failed, see logs for details")
+                await message.reply("Возникла ошибка, не удалось запиить подсказку")
                 raise e
     else:
         tip_text = manager.state.tip
