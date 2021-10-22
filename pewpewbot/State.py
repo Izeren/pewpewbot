@@ -80,10 +80,9 @@ class State:
                 ]
             )
 
-    def set_tip_for_sector(self, tip, sector_id):
-        if sector_id > len(tip):
-            raise Exception("Sector id > total number of sectors")
-        sector_tip = tip
+    def set_tip_for_sector(self, sector_tip, sector_id):
+        if not self.tip:
+            self.tip = []
         self.tip[sector_id] = [tip for tip in [raw_tip.strip() for raw_tip in sector_tip.split("\n")] if len(tip)]
 
     def __setattr__(self, name, value):
