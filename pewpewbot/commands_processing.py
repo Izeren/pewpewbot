@@ -80,7 +80,10 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
             await utils.notify_code_chat(manager, views.sector_default_ko_message(sector, manager.state))
     else:
         for sector, sector_tip in zip(koline.sectors, manager.state.tip):
-            await utils.notify_code_chat(manager, views.not_taken_with_tips(sector, sector_tip, manager.state))
+            if sector_tip:
+                await utils.notify_code_chat(manager, views.not_taken_with_tips(sector, sector_tip, manager.state))
+            else:
+                await utils.notify_code_chat(manager, views.sector_default_ko_message(sector, manager.state))
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -118,7 +121,10 @@ async def process_tip(message: types.Message, manager: Manager, **kwargs):
                 if sector_id >= len(manager.state.koline.sectors):
                     await message.reply(f"Сектора под номером: {sector_id} не существует")
                     raise Exception("В качестве номера сектора может быть: '*' / 'all' / '' / int_sector_id")
+                if not manager.state.tip:
+                    manager.state.tip = [[]] * len(manager.state.koline.sectors)
                 manager.state.set_tip_for_sector(tip, sector_id)
+                await message.reply(f"Подсказка запинена для сектора: {sector_id}")
             except Exception as e:
                 await message.reply("Возникла ошибка, не удалось запиить подсказку")
                 raise e

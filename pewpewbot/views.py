@@ -64,7 +64,8 @@ def not_taken_with_tips(sector, tips, state: State):
     result += "Сектор: *{}*\n".format(sector.name)
     result += "```\n"
 
-    for code, tip in zip(sector.codes, tips):
+    for code_id, code in enumerate(sector.codes):
+        tip = tips[code_id] if code_id < len(tips) else 'Not enough tips provided'
         if code.taken:
             continue
         result += "{:<2} {:<3} {}    \n\n".format('{}'.format(code.label + 1), code.ko, tip)

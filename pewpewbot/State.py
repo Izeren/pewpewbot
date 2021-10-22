@@ -81,8 +81,6 @@ class State:
             )
 
     def set_tip_for_sector(self, sector_tip, sector_id):
-        if not self.tip:
-            self.tip = []
         self.tip[sector_id] = [tip for tip in [raw_tip.strip() for raw_tip in sector_tip.split("\n")] if len(tip)]
 
     def __setattr__(self, name, value):
