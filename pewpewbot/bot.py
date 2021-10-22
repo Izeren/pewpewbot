@@ -50,9 +50,10 @@ def main():
     except Exception as e:
         logging.error("Failed to login")
 
-    loop.create_task(
-        utils.repeat_runtime_delay(manager, 'engine_timeout', commands_processing.update_level_status, bot, manager))
-    loop.create_task(utils.repeat_runtime_delay(manager, 'screenshot_timeout', screenshoter.update_screenshot, state))
+    loop.create_task(utils.repeat_runtime_delay(manager, 'get_engine_timeout',
+                                                commands_processing.update_level_status, bot, manager))
+    loop.create_task(utils.repeat_runtime_delay(manager, 'get_screenshot_timeout',
+                                                screenshoter.update_screenshot, state))
     loop.create_task(utils.repeat_const_delay(DUMP_CONFIG_TIMEOUT, state.dump_params, state_file_path))
 
     # Create dispatcher

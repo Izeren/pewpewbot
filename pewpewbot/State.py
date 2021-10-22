@@ -92,3 +92,19 @@ class State:
             super().__setattr__(name, value)
         elif field_type is int and isinstance(value, str):  # casts str to int
             super().__setattr__(name, int(value))
+
+    def get_tm_or_none(self):
+        tm = None
+        if self.game_status and self.game_status.current_level:
+            tm = self.game_status.current_level.tm
+        return tm
+
+    def get_engine_timeout(self):
+        tm = self.get_tm_or_none()
+        if tm and tm < self.engine_timeout:
+            return tm
+        else:
+            return self.engine_timeout
+
+    def get_screenshot_timeout(self):
+        return self.screenshot_timeout

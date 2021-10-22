@@ -104,7 +104,8 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
         except Exception as exc:
             logging.error("Exception in task", exc_info=exc)
         try:
-            delay = getattr(manager.state, key)
+            get_delay = getattr(manager.state, key)
+            delay = get_delay()
             if not isinstance(delay, int):
                 logging.error(f"manager.state.{key} is not int. Using 30.")
                 delay = 30
