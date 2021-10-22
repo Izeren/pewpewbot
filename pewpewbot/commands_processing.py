@@ -12,11 +12,8 @@ from marshmallow import EXCLUDE
 
 from aiogram import types, Bot
 
-import code_utils
-import patterns
-import views
 from pewpewbot.models import Status, Koline, CodeVerdict, StatusSchema
-from pewpewbot import utils
+from pewpewbot import utils, code_utils, patterns, views
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
 
@@ -213,8 +210,7 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
 
 async def task(message: types.Message, manager: Manager, **kwargs):
     if manager.state and manager.state.game_status and manager.state.game_status.current_level:
-        await message.reply(utils.format_level_message(manager.state.game_status.current_level.question),
-                            parse_mode='Markdown')
+        await message.utils.format_level_message(manager.state.game_status.current_level.question, parse_mode='Markdown')
 
 
 @safe_dzzzr_interaction
@@ -273,8 +269,7 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
             await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
     else:
         game_status = await manager.http_client.status()
-    # TODO: to be solved properly in issue #32
-    await message.reply(str(game_status)[:4000])
+    await message.reply(str(game_status))
     await update_level_status(manager.bot, manager, **{'game_status': game_status})
 
 
@@ -430,8 +425,7 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
 async def get_all_params(message: types.Message, manager: Manager, **kwargs):
     values = asdict(manager.state)
     text = "\n".join(f"{key}: {value}" for key, value in values.items())
-    # TODO: to be solved properly in issue #32
-    await message.reply(f"Все заданные переменные:\n{text[:4000]}")
+    await message.reply(f"Все заданные переменные:\n{text}")
 
 
 async def get_version(message: types.Message, manager: Manager, **kwargs):

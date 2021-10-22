@@ -7,11 +7,12 @@ import commands_processing
 from pewpewbot.command_patterns import COMMAND_MANAGER
 from os import path
 from logging import config
-from aiogram import Bot, Dispatcher, executor
+from aiogram import Dispatcher, executor
 from pewpewbot import utils
 from pewpewbot.client import Client
 from pewpewbot.manager import Manager
 from pewpewbot.State import State
+from pewpewbot.queue_bot import QueueBot
 
 DUMP_CONFIG_TIMEOUT = 30
 
@@ -36,7 +37,7 @@ def main():
     loop = asyncio.get_event_loop()
 
     # Initialize bot and manager
-    bot = Bot(token=api_token, loop=loop)
+    bot = QueueBot(token=api_token, loop=loop)
     state = State()
     if state_file_path.is_file():
         try:
