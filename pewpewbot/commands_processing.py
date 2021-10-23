@@ -210,7 +210,8 @@ async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
 
 async def task(message: types.Message, manager: Manager, **kwargs):
     if manager.state and manager.state.game_status and manager.state.game_status.current_level:
-        await message.utils.format_level_message(manager.state.game_status.current_level.question, parse_mode='Markdown')
+        await message.reply(utils.format_level_message(manager.state.game_status.current_level.question), 
+            parse_mode='Markdown')
 
 
 @safe_dzzzr_interaction
