@@ -75,7 +75,7 @@ class QueueBot(Bot):
             types.ForceReply,
             None,
         ] = None,
-    ) -> typing.List[asyncio.Future[types.Message]]:
+    ) -> typing.List[typing.Awaitable[types.Message]]:
         """Splits message, puts in the queue, returns list of Future of sent messages"""
         all_args = locals()
         fut_list = []
