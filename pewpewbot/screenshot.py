@@ -1,16 +1,44 @@
 import asyncio
 import logging
+from copy import deepcopy
 
+import structlog
+from arsenic import browsers, keys, services, start_session, stop_session
 from arsenic.session import Session
+from structlog.types import WrappedLogger
+
 from pewpewbot.State import State
 
-from arsenic import browsers, services, start_session, stop_session, keys
+# Fix long values in log for screenshot method
+class DictTrimmerProcessor:
+    def __init__(self, max_chars=25) -> None:
+        self.max_chars = max_chars
+        self.block_length = max_chars // 2 - 1
 
+    def __call__(self, logger: WrappedLogger, method_name: str, event_dict: dict):
+        """Processor to trim long fields in dicts
+        Description: https://www.structlog.org/en/stable/processors.html
+        """
+        for field in event_dict:
+            if isinstance(event_dict[field], dict):
+                val = deepcopy(event_dict[field]) # Copy so that original event_dict is not changed
+                for key in val:
+                    if isinstance(val[key], str) and len(val[key]) > self.max_chars:
+                        val[key] = f"{val[key][:self.block_length]}...{val[key][-self.block_length:]}"
+                event_dict[field] = val
+        return event_dict
+
+
+def fix_arsenic_log():
+    processors = structlog.get_config().get("processors", [])
+    processors.insert(0, DictTrimmerProcessor())
+    structlog.configure(processors=processors)
 
 class Screenshoter:
     def __init__(
         self, url=None, height=1000, width=1000, file_name="screenshot.png", loop=None
     ):
+        fix_arsenic_log()
         self.url = url
         self.height = height
         self.width = width
@@ -66,6 +94,6 @@ class Screenshoter:
     def __del__(self):
         try:
             logging.info("Shutting down browser session...")
-            stop_session(self.session)
+            self.loop.run_until_complete(stop_session(self.session))
         except AttributeError:  # if session does not exist, do nothing
             pass
