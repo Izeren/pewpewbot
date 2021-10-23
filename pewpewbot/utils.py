@@ -1,8 +1,9 @@
 import asyncio
 import logging
 import re
+from typing import List
 
-import patterns
+from pewpewbot import patterns
 from pewpewbot import command_patterns
 from enum import Enum
 from aiogram import types, Bot
@@ -118,3 +119,30 @@ async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs
 def get_schema_urls(level_message):
     links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message)
     return tuple(DZZZR_UPLOADED_FILES_LINK + link for link in links)
+
+def split_text(text: str, max_length: int=4096) -> List[str]:
+    """Splits text by lines. If some line is too long, by spaces
+    """
+    chunks = text.splitlines(keepends=True)
+    ans = []
+    cur = ""
+    while chunks:
+        cur_chunk = chunks.pop(0)
+        if len(cur_chunk) > max_length:
+            split_chunk = re.split('(\S*\s)', cur_chunk) # Split by whitespace, saving the delimeter
+            if len(split_chunk) == 1:
+                # if no spaces, split by length
+                split_chunk = [
+                    cur_chunk[i: i+max_length] 
+                    for i in range(0, len(cur_chunk), max_length)
+                ]
+            chunks = split_chunk + chunks
+            continue
+        if len(cur) + len(cur_chunk) > max_length:
+            ans.append(cur)
+            cur = cur_chunk
+        else:
+            cur += cur_chunk
+    if cur:
+        ans.append(cur)
+    return ans

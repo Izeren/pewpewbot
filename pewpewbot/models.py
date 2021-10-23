@@ -6,7 +6,7 @@ from typing import Any, List, Union
 
 from marshmallow import Schema, fields, post_load, missing
 
-import patterns
+from pewpewbot import patterns
 from pewpewbot.errors import AuthenticationError
 
 

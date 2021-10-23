@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from State import State
+from pewpewbot.State import State
 from pewpewbot.models import Sector, ParsedCode, Koline
 
 
