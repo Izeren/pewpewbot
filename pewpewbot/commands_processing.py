@@ -223,14 +223,22 @@ async def login(message: types.Message, manager: Manager, **kwargs):
     await manager.http_client.log_in(login, passwd)
 
 
+def get_forced_code_text_from_message_or_reply(message: types.Message) -> str:
+    text = message.text.lower().strip()
+    if text.startswith('.') or text.startswith('/'):
+        # Strip is here to remove space after /
+        text = text[1:].strip()
+        if 0 == len(text) and message.reply_to_message:
+            text = message.reply_to_message.text.lower().strip()
+    return text
+
+
 @safe_dzzzr_interaction
 async def process_code(message: types.Message, manager: Manager, **kwargs):
     if not manager.state.type_on:
         return
-    text = message.text
-    if text.startswith('.') or text.startswith('/'):
-        text = text[1:]
-    text = text.lower().strip()
+    text = get_forced_code_text_from_message_or_reply(message)
+
     # TODO: make all awaits in the end
     await message.reply("Пытаюсь пробить код: {}".format(text))
     code_result = await manager.http_client.post_code(text)
