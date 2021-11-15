@@ -4,10 +4,8 @@ import re
 from typing import List
 
 from pewpewbot import patterns
-from pewpewbot import command_patterns
 from enum import Enum
 from aiogram import types, Bot
-from pewpewbot.TgCommand import TgCommand
 from pewpewbot.manager import Manager
 
 CLEAN_TAGS_RE = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
@@ -18,6 +16,10 @@ DZZZR_UPLOADED_FILES_LINK = 'http://classic.dzzzr.ru/'
 class Modes(Enum):
     ENABLED = "on"
     DISABLED = "off"
+
+
+def parse_message_text(message: types.Message) -> str:
+    return message.text if message.text else (message.caption if message.caption else "")
 
 
 def clean_html_tags(message):
@@ -43,7 +45,7 @@ def format_level_message(question: str):
 
 
 def trim_command_name(message: types.Message, command_name):
-    return message.text[len(command_name) + 2:]
+    return parse_message_text(message)[len(command_name) + 2:]
 
 
 def parse_new_mode(mode):

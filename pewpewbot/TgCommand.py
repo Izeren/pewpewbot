@@ -3,7 +3,7 @@ from pewpewbot.manager import Manager
 from textwrap import dedent
 
 from aiogram import types
-from pewpewbot import commands_processing
+from pewpewbot import commands_processing, utils
 from typing import List
 
 
@@ -18,7 +18,7 @@ class TgCommand(object):
         self.enabled = enabled
 
     def apply_and_get_awaitable(self, message, manager, **kwargs):
-        command_name = message.text.split(' ', maxsplit=1)[0].lstrip('/')
+        command_name = utils.parse_message_text(message).split(' ', maxsplit=1)[0].lstrip('/')
         # assert command_name in self.names, (command_name, self.names)
         kwargs['command_name'] = command_name
         return self.awaitable_action_method(message, manager, **kwargs)
@@ -56,5 +56,6 @@ class TgCommandManager:
                 partial(command.apply_and_get_awaitable, manager=manager), **kwargs
             )
         dispatcher.register_message_handler(
-            partial(commands_processing.process_unknown, manager=manager), **{}
+            partial(commands_processing.process_unknown, manager=manager),
+            content_types=types.ContentType.all(), **{}
         )
