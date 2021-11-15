@@ -385,10 +385,16 @@ async def try_process_coords(message: types.Message, manager: Manager, text: str
                                 .format(s_lat, s_long))
 
 
+async def try_process_code(message: types.Message, manager: Manager, text: str):
+    if re.fullmatch(patterns.STANDARD_CODE_PATTERN, text):
+        message.text = text.replace('д', 'd').replace('р', 'r')
+    await process_code(message, manager)
+
+
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
     text = message.text.lower()
     if re.fullmatch(manager.state.code_pattern, text) or text.startswith('.'):
-        await process_code(message, manager)
+        await try_process_code(message, manager, text)
     elif manager.state.maps_on:
         await try_process_coords(message, manager, text)
 
