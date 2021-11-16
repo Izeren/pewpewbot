@@ -224,12 +224,13 @@ async def login(message: types.Message, manager: Manager, **kwargs):
 
 
 def get_forced_code_text_from_message_or_reply(message: types.Message) -> str:
-    text = message.text.lower().strip()
+    text = utils.parse_message_text(message).lower().strip()
     if text.startswith('.') or text.startswith('/'):
         # Strip is here to remove space after /
         text = text[1:].strip()
         if 0 == len(text) and message.reply_to_message:
-            text = message.reply_to_message.text.lower().strip()
+            parent = message.reply_to_message
+            text = utils.parse_message_text(parent).lower().strip()
     return text
 
 
@@ -400,8 +401,10 @@ async def try_process_code(message: types.Message, manager: Manager, text: str):
 
 
 async def process_unknown(message: types.Message, manager: Manager, **kwargs):
-    text = message.text.lower()
-    if re.fullmatch(manager.state.code_pattern, text) or text.startswith('.'):
+    text = utils.parse_message_text(message).lower()
+    # check for '/ ' here is for processing messages with media content
+    # as they are not yet supported for default commands
+    if re.fullmatch(manager.state.code_pattern, text) or text.startswith('.') or text.startswith('/ '):
         await try_process_code(message, manager, text)
     elif manager.state.maps_on:
         await try_process_coords(message, manager, text)
@@ -412,13 +415,13 @@ async def process_get_chat_id(message: types.Message, manager: Manager, **kwargs
 
 
 async def pin_chat(message: types.Message, manager: Manager, **kwargs):
-    if 'main' in message.text:
+    if 'main' in utils.parse_message_text(message):
         setattr(manager.state, 'main_chat_id', str(message.chat.id))
         await message.reply("Установлен чат для организационной информации")
-    elif 'code' in message.text:
+    elif 'code' in utils.parse_message_text(message):
         setattr(manager.state, 'code_chat_id', str(message.chat.id))
         await message.reply("Установлен чат для ввода кодов и штабных трансляций")
-    elif 'debug' in message.text:
+    elif 'debug' in utils.parse_message_text(message):
         setattr(manager.state, 'debug_chat_id', str(message.chat.id))
         await message.reply("Установлен чат для дебажных отчетов")
     else:
