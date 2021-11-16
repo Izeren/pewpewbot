@@ -395,7 +395,7 @@ async def try_process_coords(message: types.Message, manager: Manager, text: str
 
 
 async def try_process_code(message: types.Message, manager: Manager, text: str):
-    if re.fullmatch(patterns.STANDARD_CODE_PATTERN, text):
+    if re.fullmatch(patterns.CYRILLIC_DR_PATTERN, text):
         message.text = text.replace('д', 'd').replace('р', 'r')
     await process_code(message, manager)
 
