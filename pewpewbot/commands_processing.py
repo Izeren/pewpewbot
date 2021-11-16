@@ -283,9 +283,7 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
     await update_level_status(manager.bot, manager, **{'game_status': game_status})
 
 
-async def _process_next_level(status, manager: Manager, silent=True):
-    manager.logger.info("New game status from site {} ".format(status))
-    _update_current_level_info(status, manager)
+async def _process_next_level(status, manager: Manager, silent):
     manager.state.reset('code_pattern')
     manager.state.reset('tip')
     if silent:
@@ -315,7 +313,18 @@ async def _process_next_level(status, manager: Manager, silent=True):
             utils.format_level_message(status.current_level.locationComment))
 
 
-def _update_current_level_info(game_status: Status, manager: Manager):
+async def update_on_spoiler_solved(manager: Manager, new_status: Status) -> None:
+    old_spoiler_status = manager.state.game_status.get_spoiler_or_none() if manager.state.game_status else None
+    new_spoiler_status = new_status.get_spoiler_or_none() if new_status else None
+    if old_spoiler_status and new_spoiler_status:
+        if not old_spoiler_status.is_solved() and new_spoiler_status.is_solved():
+            await utils.notify_all_channels(manager, "Спойлер ап\n" +
+                                            utils.clean_html_tags(new_spoiler_status.spoilerText))
+
+
+async def _update_current_level_info(game_status: Status, manager: Manager, on_up: bool):
+    if not on_up:
+        await update_on_spoiler_solved(manager, game_status)
     manager.state.game_status = game_status
     if not game_status.current_level:
         logger.info("Level info is empty")
@@ -373,10 +382,14 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
     current_level_id = game_status.current_level.levelNumber
     # To avoid dummy messages to the chats on the bot or game startup
     if not manager.state.game_status:
-        return await _process_next_level(game_status, manager)
+        manager.logger.info("New game status from site {} ".format(game_status))
+        await _update_current_level_info(game_status, manager, on_up=True)
+        return await _process_next_level(game_status, manager, silent=True)
     if manager.state.game_status.current_level.levelNumber != current_level_id:
+        manager.logger.info("New game status from site {} ".format(game_status))
+        await _update_current_level_info(game_status, manager, on_up=True)
         return await _process_next_level(game_status, manager, silent=False)
-    return _update_current_level_info(game_status, manager)
+    return await _update_current_level_info(game_status, manager, on_up=False)
 
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):

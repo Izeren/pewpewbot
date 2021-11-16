@@ -89,6 +89,9 @@ class Spoiler:
     spoilerPenalty: int
     spoilerNumber: int
 
+    def is_solved(self):
+        return '1' == self.spoilerSolved
+
 
 @dataclass
 class LevelStatus:
@@ -168,6 +171,12 @@ class Status:
             game_start_time='gameStartTime', hold_time='holdTime', break_time='onBreak', current_time='currentTime',
             current_level='level', bonus_levels='bonusLevels', last_organizational_message='lastOrgMessage',
             error='errNo', error_text='errText'))
+
+    def get_spoiler_or_none(self):
+        if self.current_level and self.current_level.spoilers and len(self.current_level.spoilers) > 0:
+            return self.current_level.spoilers[0]
+        else:
+            return None
 
 
 class SpoilerSchema(Schema):
