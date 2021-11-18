@@ -284,7 +284,7 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
     await update_level_status(manager.bot, manager, **{'game_status': game_status})
 
 
-async def _process_next_level(status, manager: Manager, silent):
+async def process_next_level(status, manager: Manager, silent):
     manager.state.reset('code_pattern')
     manager.state.reset('tip')
     if silent:
@@ -382,14 +382,11 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
         return
     current_level_id = game_status.current_level.levelNumber
     # To avoid dummy messages to the chats on the bot or game startup
-    if not manager.state.game_status:
+    is_fresh_start = not manager.state.game_status
+    if is_fresh_start or manager.state.game_status.current_level.levelNumber != current_level_id:
         manager.logger.info("New game status from site {} ".format(game_status))
         await _update_current_level_info(game_status, manager, on_up=True)
-        return await _process_next_level(game_status, manager, silent=True)
-    if manager.state.game_status.current_level.levelNumber != current_level_id:
-        manager.logger.info("New game status from site {} ".format(game_status))
-        await _update_current_level_info(game_status, manager, on_up=True)
-        return await _process_next_level(game_status, manager, silent=False)
+        return await process_next_level(game_status, manager, silent=is_fresh_start)
     return await _update_current_level_info(game_status, manager, on_up=False)
 
 

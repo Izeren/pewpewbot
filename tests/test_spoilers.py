@@ -5,7 +5,7 @@ from logging import Logger
 
 from State import State
 from client import Client
-from commands_processing import update_level_status
+from pewpewbot.commands_processing import update_level_status
 from manager import Manager
 from models import Status, Spoiler, LevelStatus, Koline
 from queue_bot import QueueBot
@@ -24,10 +24,6 @@ def mock_game_status(level_id, is_spoiler, is_solved):
     game_status.get_spoiler_or_none = Mock(return_value=spoiler if is_spoiler else None)
     return game_status
 
-
-game_status_l2_no_spoiler = mock_game_status(2, False, False)
-game_status_l2_up = mock_game_status(2, True, False)
-game_status_l2_not_up = mock_game_status(2, True, True)
 
 screenshoter_mock = Mock(Screenshoter)
 http_client_mock = Mock(Client)
@@ -97,13 +93,43 @@ class OnLevelSpoilerTests(unittest.IsolatedAsyncioTestCase):
         notify_mock.assert_not_called()
 
 
-class OnLevelUpSpoilerTests(unittest.TestCase):
+class OnLevelUpSpoilerTests(unittest.IsolatedAsyncioTestCase):
 
-    def test_not_up_then_no_spoiler(self):
-        pass
+    @patch('pewpewbot.model_parsing_utils.parse_koline_from_string', return_value=Mock(Koline))
+    @patch('pewpewbot.commands_processing.process_next_level')
+    async def test_not_up_then_no_spoiler(self, next_level_mock, parse_mock):
+        # given
+        game_status_l1_not_up = mock_game_status(1, True, False)
+        game_status_l2_no_spoiler = mock_game_status(2, False, False)
+        manager_mock.state.game_status = game_status_l1_not_up
 
-    def test_up_then_no_spoiler(self):
-        pass
+        # when
+        await update_level_status(manager_mock.bot, manager_mock, **{'game_status': game_status_l2_no_spoiler})
+
+        # then
+        game_status_l1_not_up.get_spoiler_or_none.assert_not_called()
+        game_status_l2_no_spoiler.get_spoiler_or_none.assert_not_called()
+        game_status_l1_not_up.current_level.spoilers[0].is_solved.assert_not_called()
+        parse_mock.assert_called_once()
+        next_level_mock.assert_called_once_with(game_status_l2_no_spoiler, manager_mock, silent=False)
+
+    @patch('pewpewbot.model_parsing_utils.parse_koline_from_string', return_value=Mock(Koline))
+    @patch('pewpewbot.commands_processing.process_next_level')
+    async def test_up_then_no_spoiler(self, next_level_mock, parse_mock):
+        # given
+        game_status_l1_up = mock_game_status(1, True, True)
+        game_status_l2_no_spoiler = mock_game_status(2, False, False)
+        manager_mock.state.game_status = game_status_l1_up
+
+        # when
+        await update_level_status(manager_mock.bot, manager_mock, **{'game_status': game_status_l2_no_spoiler})
+
+        # then
+        game_status_l1_up.get_spoiler_or_none.assert_not_called()
+        game_status_l2_no_spoiler.get_spoiler_or_none.assert_not_called()
+        game_status_l1_up.current_level.spoilers[0].is_solved.assert_not_called()
+        parse_mock.assert_called_once()
+        next_level_mock.assert_called_once_with(game_status_l2_no_spoiler, manager_mock, silent=False)
 
 
 if __name__ == '__main__':
