@@ -79,11 +79,6 @@ async def image_to_all_channels(manager: 'Manager', message: types.message, link
         await manager.bot.send_photo(manager.state.main_chat_id, link, message, parse_mode='Markdown')
 
 
-async def notify_code_chat(manager: 'Manager', message: types.message):
-    if manager.state.code_chat_id is not None:
-        await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
-
-
 async def notify_debug_chat(manager: 'Manager', message: types.message):
     if manager.state.debug_chat_id is not None:
         await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')

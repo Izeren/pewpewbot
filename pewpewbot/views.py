@@ -1,7 +1,8 @@
 from datetime import timedelta
 
 from pewpewbot.State import State
-from pewpewbot.models import Sector, ParsedCode, Koline
+from pewpewbot.models import Sector, Koline, CodeVerdict
+from pewpewbot.code_utils import CODE_VERDICT_TO_MESSAGE
 
 
 def get_tm_safe(state: State):
@@ -11,7 +12,7 @@ def get_tm_safe(state: State):
         return None
 
 
-def sector_default_ko_message(sector: Sector, state: State):
+def sector_default_ko_message(sector: Sector, state: State, ko_caption: str):
     """
     Вьюха списка KO в виде текста
     """
@@ -21,10 +22,11 @@ def sector_default_ko_message(sector: Sector, state: State):
     cols = 2  # Колонок всегда 2
     pages = size // (rows * cols) + 1  # Кол-во страниц
 
-    result = ""
     tm = get_tm_safe(state)
-    if tm:
-        result += "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
+    if tm and not ko_caption:
+        result = "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
+    else:
+        result = ko_caption
     result += "Название сектора: *{}*\n".format(sector.name)
 
     result += "```\n"
@@ -57,9 +59,6 @@ def not_taken_with_tips(sector, tips, state: State):
     """
     result = ""
 
-    tm = get_tm_safe(state)
-    if tm:
-        result += "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
 
     result += "Сектор: *{}*\n".format(sector.name)
     result += "```\n"
@@ -75,6 +74,20 @@ def not_taken_with_tips(sector, tips, state: State):
     return result
 
 
+def not_taken_with_tips_for_sector_list(sectors, state: State, ko_caption: str):
+    tm = get_tm_safe(state)
+    if tm and not ko_caption:
+        result = "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
+    else:
+        result = ko_caption
+    for sector, sector_tip in zip(sectors, state.tip):
+        if sector_tip:
+            result += not_taken_with_tips(sector, sector_tip, state) + "\n"
+        else:
+            result += sector_default_ko_message(sector, state, ko_caption) + "\n"
+    return result
+
+
 def get_sectors_list(koline: Koline) -> str:
     """
     :param koline: принимает экземпляр класса Koline
@@ -84,3 +97,12 @@ def get_sectors_list(koline: Koline) -> str:
     for sector_id, sector in enumerate(koline.sectors):
         message += f"{sector_id}: *{sector.name}*\n"
     return message
+
+
+def code_verdict_view(verdict_value: CodeVerdict, code: str) -> str:
+    """
+    :param verdict_value: Вердикт движка
+    :param code: Текст пробитого кода
+    :return: Форматированный вердикт для отправленного кода
+    """
+    return f"{CODE_VERDICT_TO_MESSAGE[verdict_value]}\n*{code}*"
