@@ -186,12 +186,12 @@ async def process_bool_setting(message: types.Message, manager: Manager, state_f
     Updates bool settings from message in state.
     """
     text = utils.trim_command_name(message, command_name).strip()
-    mode = utils.parse_new_mode(text)
-    if mode is None:
-        await message.reply("Неверный режим использования, используйте 'on' или 'off'")
-    else:
+    try:
+        mode = utils.parse_bool(text)
         setattr(manager.state, state_field, mode)
         await message.reply(f"{desc} {utils.get_text_mode_status(mode)}")
+    except ValueError:
+        await message.reply("Неверный режим использования, используйте 'on' или 'off'")
 
 
 async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
