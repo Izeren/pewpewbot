@@ -12,7 +12,8 @@ from marshmallow import EXCLUDE
 
 from aiogram import types, Bot
 
-from pewpewbot.models import Status, Koline, CodeVerdict, StatusSchema
+from pewpewbot import model_parsing_utils
+from pewpewbot.models import Status, CodeVerdict, StatusSchema
 from pewpewbot import utils, code_utils, patterns, views
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
@@ -318,7 +319,7 @@ async def update_on_spoiler_solved(manager: Manager, new_status: Status) -> None
     new_spoiler_status = new_status.get_spoiler_or_none() if new_status else None
     if old_spoiler_status and new_spoiler_status:
         if not old_spoiler_status.is_solved() and new_spoiler_status.is_solved():
-            await utils.notify_all_channels(manager, "Спойлер ап\n" +
+            await utils.notify_all_channels(manager, "Спойлер ап:\n" +
                                             utils.clean_html_tags(new_spoiler_status.spoilerText))
 
 
@@ -333,7 +334,7 @@ async def _update_current_level_info(game_status: Status, manager: Manager, on_u
         logger.info("Level with empty koline")
         return
     try:
-        manager.state.koline = Koline.from_string(game_status.current_level.koline)
+        manager.state.koline = model_parsing_utils.parse_koline_from_string(game_status.current_level.koline)
     except Exception as e:
         logger.error("Bad koline to parse: {}".format(game_status.current_level.koline))
 
@@ -341,7 +342,7 @@ async def _update_current_level_info(game_status: Status, manager: Manager, on_u
 async def _update_current_level_info_on_code(verdict: str, message: types.Message, manager: Manager):
     new_status = await manager.http_client.status()
     koline = manager.state.koline
-    new_koline = Koline.from_string(new_status.current_level.koline)
+    new_koline = model_parsing_utils.parse_koline_from_string(new_status.current_level.koline)
 
     if not koline:
         logger.error("Koline has not been initialized on level")
