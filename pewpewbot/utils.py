@@ -1,12 +1,13 @@
 import asyncio
 import logging
 import re
-from typing import List
+from typing import Any, List, TYPE_CHECKING
 
 from pewpewbot import patterns
 from enum import Enum
 from aiogram import types, Bot
-from pewpewbot.manager import Manager
+if TYPE_CHECKING:
+    from pewpewbot.manager import Manager
 
 CLEAN_TAGS_RE = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 
@@ -48,16 +49,19 @@ def trim_command_name(message: types.Message, command_name):
     return parse_message_text(message)[len(command_name) + 2:]
 
 
-def parse_new_mode(mode):
-    if mode == Modes.ENABLED.value:
-        return True
-    elif mode == Modes.DISABLED.value:
-        return False
+def parse_bool(value: Any):
+    if isinstance(value, str): 
+        if value.lower() in ["on", "true", "1"]:
+            return True
+        elif value.lower() in ["off", "false", "0"]:
+            return False
+        else:
+            raise ValueError(f"Could not convert {value} to bool")
     else:
-        return None
+        return bool(value)
 
 
-async def notify_all_channels(manager: Manager, message: types.message):
+async def notify_all_channels(manager: 'Manager', message: types.message):
     if manager.state.debug_chat_id:
         await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
     if manager.state.code_chat_id:
@@ -66,7 +70,7 @@ async def notify_all_channels(manager: Manager, message: types.message):
         await manager.bot.send_message(manager.state.main_chat_id, message, parse_mode='Markdown')
 
 
-async def image_to_all_channels(manager: Manager, message: types.message, link: str):
+async def image_to_all_channels(manager: 'Manager', message: types.message, link: str):
     if manager.state.debug_chat_id:
         await manager.bot.send_photo(manager.state.debug_chat_id, link, message, parse_mode='Markdown')
     if manager.state.code_chat_id:
@@ -75,12 +79,12 @@ async def image_to_all_channels(manager: Manager, message: types.message, link: 
         await manager.bot.send_photo(manager.state.main_chat_id, link, message, parse_mode='Markdown')
 
 
-async def notify_code_chat(manager: Manager, message: types.message):
+async def notify_code_chat(manager: 'Manager', message: types.message):
     if manager.state.code_chat_id is not None:
         await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
 
 
-async def notify_debug_chat(manager: Manager, message: types.message):
+async def notify_debug_chat(manager: 'Manager', message: types.message):
     if manager.state.debug_chat_id is not None:
         await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
 
@@ -100,7 +104,7 @@ async def repeat_const_delay(delay: int, coro, *args, **kwargs):
 
 
 # Util for performing periodic tasks. Accepts a manager and key in manager.state so that delay can be changed in runtime
-async def repeat_runtime_delay(manager: Manager, key: str, coro, *args, **kwargs):
+async def repeat_runtime_delay(manager: 'Manager', key: str, coro, *args, **kwargs):
     while True:
         try:
             await coro(*args, **kwargs)

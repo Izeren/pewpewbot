@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from pewpewbot.models import Status, Koline
 from dataclasses import MISSING, asdict, dataclass, field
-from pewpewbot import patterns
+from pewpewbot import patterns, utils
 
 
 @dataclass
@@ -90,8 +90,14 @@ class State:
         field_type = field.type
         if isinstance(value, field_type) or value is None:  # if value type matches field
             super().__setattr__(name, value)
+        elif field_type is bool:
+            bool_value = utils.parse_bool(value)
+            super().__setattr__(name, bool_value)
         elif field_type is int and isinstance(value, str):  # casts str to int
             super().__setattr__(name, int(value))
+        else:
+            raise ValueError(f"Could not assign value of type {type(value)} "
+                "to field {field} of type {field_type}")
 
     def get_tm_or_none(self):
         tm = None
