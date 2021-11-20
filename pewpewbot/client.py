@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from marshmallow import EXCLUDE
 
-from pewpewbot.models import CodeSchema, CodeVerdict, Status, StatusSchema, TokenSchema, CodeResult
+from pewpewbot.models import CodeSchema, Status, StatusSchema, TokenSchema, CodeResult
 from pewpewbot.errors import AuthenticationError, wrap_errors, ValidationError
 
 DEFAULT_ENDPOINT = 'http://classic.dzzzr.ru'

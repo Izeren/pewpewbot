@@ -1,4 +1,4 @@
-from models import Koline, Sector
+from pewpewbot.models import Koline, Sector
 
 # This is a separate utils file to prevent circular import of Manager and Utils
 

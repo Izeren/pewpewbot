@@ -3,7 +3,6 @@ import logging
 import re
 from typing import Any, List, TYPE_CHECKING
 
-from pewpewbot.models import Koline, Sector
 from pewpewbot import patterns
 from enum import Enum
 from aiogram import types
