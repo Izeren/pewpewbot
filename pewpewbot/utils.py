@@ -5,7 +5,7 @@ from typing import Any, List, TYPE_CHECKING
 
 from pewpewbot import patterns
 from enum import Enum
-from aiogram import types, Bot
+from aiogram import types
 if TYPE_CHECKING:
     from pewpewbot.manager import Manager
 
@@ -50,7 +50,7 @@ def trim_command_name(message: types.Message, command_name):
 
 
 def parse_bool(value: Any):
-    if isinstance(value, str): 
+    if isinstance(value, str):
         if value.lower() in ["on", "true", "1"]:
             return True
         elif value.lower() in ["off", "false", "0"]:
