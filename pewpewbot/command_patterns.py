@@ -1,6 +1,5 @@
 from pewpewbot import commands_processing
-from pewpewbot.TgCommand import TgCommand, TgCommandManager
-from pewpewbot.patterns import STANDARD_COORDS_PATTERN, STANDARD_CODE_PATTERN
+from pewpewbot.tg_command import TgCommand, TgCommandManager
 
 COMMAND_MANAGER = TgCommandManager()
 
@@ -205,6 +204,23 @@ COMMAND_MANAGER.add_commands(
         awaitable_action_method=commands_processing.process_code,
         enabled=True,
         pattern=r"/ ",
+    ),
+    TgCommand(
+        names="",
+        help_text="""
+        Команда для ручного тестирования, пример использования в комбинации с командой /st
+        1. /st sg_1_0
+        2. /test_code verdict sg_1_1
+        первый аргумент: вердикт движка, который нужно сымитировать в числовом формате, 
+            для референса вердиктов см. code_utils.py 
+        второй аргумент: "новый" статус движка после "отправки" кода, см. /st
+        после запуска этой комбинации, бот будет считать всю разницу принятых кодов между статусами -- принятыми кодами,
+        в выводе будет считаться пробитым dr1
+        для корректного тестирования последнего кода на уровне, нужно загружать статус уровня с другим levelNumber
+        """,
+        awaitable_action_method=commands_processing.process_test_code,
+        enabled=True,
+        pattern=r"/test_code",
     ),
     TgCommand(
         names="",

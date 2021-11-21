@@ -1,12 +1,9 @@
-import logging
-import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, List, Union
 
 from marshmallow import Schema, fields, post_load, missing
 
-from pewpewbot import patterns
 from pewpewbot.errors import AuthenticationError
 
 

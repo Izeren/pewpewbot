@@ -13,10 +13,11 @@ from marshmallow import EXCLUDE
 from aiogram import types, Bot
 
 from pewpewbot import model_parsing_utils
-from pewpewbot.models import Status, CodeVerdict, StatusSchema
+from pewpewbot.models import Status, CodeVerdict, StatusSchema, CodeResult
 from pewpewbot import utils, code_utils, patterns, views
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
+from pewpewbot.views import try_send_code_view, code_update_view
 
 logger = logging.getLogger("bot")
 logger.propagate = False
@@ -67,21 +68,18 @@ async def parse_coords_to_location(message: types.Message, manager: Manager, **k
                         .format(kwargs['command_name']))
 
 
-async def update_ko(message: types.Message, manager: Manager, **kwargs):
-    koline = await manager.get_or_load_and_parse_koline()
-
-
 async def send_ko(message: types.Message, manager: Manager, **kwargs):
+    ko_caption = kwargs['ko_caption'] if 'ko_caption' in kwargs else ''
     koline = await manager.get_or_load_and_parse_koline()
     if not manager.state.tip:
         for sector in koline.sectors:
-            await utils.notify_code_chat(manager, views.sector_default_ko_message(sector, manager.state))
+            await message.reply(
+                views.sector_default_ko_message(sector, manager.state, ko_caption),
+                parse_mode='Markdown')
     else:
-        for sector, sector_tip in zip(koline.sectors, manager.state.tip):
-            if sector_tip:
-                await utils.notify_code_chat(manager, views.not_taken_with_tips(sector, sector_tip, manager.state))
-            else:
-                await utils.notify_code_chat(manager, views.sector_default_ko_message(sector, manager.state))
+        await message.reply(
+            views.not_taken_with_tips_for_sector_list(manager.state, ko_caption),
+            parse_mode='Markdown')
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -196,17 +194,10 @@ async def process_bool_setting(message: types.Message, manager: Manager, state_f
 
 
 async def get_bot_status(message: types.Message, manager: Manager, **kwargs):
-    text = '''Режим работы бота:
---- Парсинг движка {}
---- Автоматический ввод кодов {}
---- Парсинг координат с локацией {}
-'''
-    formatted = text.format(
-        utils.get_text_mode_status(manager.state.parse_on),
-        utils.get_text_mode_status(manager.state.type_on),
-        utils.get_text_mode_status(manager.state.maps_on)
-    )
-    await message.reply(formatted)
+    await message.reply(f'''Режим работы бота:
+  \u2022 Парсинг движка {utils.get_text_mode_status(manager.state.parse_on)}
+  \u2022 Автоматический ввод кодов {utils.get_text_mode_status(manager.state.type_on)}
+  \u2022 Парсинг координат с локацией {utils.get_text_mode_status(manager.state.maps_on)}''')
 
 
 async def task(message: types.Message, manager: Manager, **kwargs):
@@ -239,45 +230,72 @@ def get_forced_code_text_from_message_or_reply(message: types.Message) -> str:
 async def process_code(message: types.Message, manager: Manager, **kwargs):
     if not manager.state.type_on:
         return
-    text = get_forced_code_text_from_message_or_reply(message)
+    code = get_forced_code_text_from_message_or_reply(message)
 
-    # TODO: make all awaits in the end
-    await message.reply("Пытаюсь пробить код: {}".format(text))
-    code_result = await manager.http_client.post_code(text)
+    if manager.state.enhanced_code_report:
+        await message.reply(try_send_code_view(code), parse_mode='Markdown')
+
+    if 'forced_code_verdict' in kwargs:
+        code_result = CodeResult(kwargs['forced_code_verdict'], '')
+    else:
+        code_result = await manager.http_client.post_code(code)
+
     if isinstance(code_result.verdict, int):
         return await message.reply(code_result.comment)
-    if code_result.verdict.value not in code_utils.GOOD_VERDICTS:
-        return await message.reply(code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value])
+    verdict_value = code_result.verdict.value
+    code_verdict_view_message = views.code_verdict_view(code_result.verdict.value, code)
+    if verdict_value not in code_utils.GOOD_VERDICTS:
+        return await message.reply(code_verdict_view_message, parse_mode='Markdown')
     else:
         if code_result.verdict.value == CodeVerdict.ACCEPTED_NEXT_LEVEL.value:
-            await utils.notify_all_channels(manager, "Взят последний код на уровне")
-            return await update_level_status(manager.bot, manager)
-        await _update_current_level_info_on_code(
-            code_utils.CODE_VERDICT_TO_MESSAGE[code_result.verdict.value], message, manager)
-        if code_result.verdict.value in code_utils.ACCEPTED_VERDICTS:
-            await send_ko(message, manager, **kwargs)
+            await utils.notify_all_channels(manager, code_verdict_view_message)
+            return await update_level_status(manager.bot, manager, **kwargs)
+        code_updates = await _update_current_level_info_on_code(code_verdict_view_message, message, manager, **kwargs)
+        kwargs['ko_caption'] = code_updates
+        await send_ko(message, manager, **kwargs)
+
+
+async def process_test_code(message: types.Message, manager: Manager, **kwargs):
+    text = utils.trim_command_name(message, kwargs['command_name']).strip()
+    verdict, game_status_ref = text.split(maxsplit=1)
+    code_verdict = CodeVerdict(int(verdict))
+    game_status = get_forced_game_status_or_none(game_status_ref)
+    if game_status is None:
+        return await message.reply(f"Не удалось загрузить новый статус: {game_status_ref}")
+    kwargs['forced_code_verdict'] = code_verdict
+    kwargs['game_status'] = game_status
+    message.text = 'dr1'
+    await process_code(message, manager, **kwargs)
 
 
 async def list_sectors(message: types.Message, manager: Manager, **kwargs):
     return await message.reply(views.get_sectors_list(manager.state.koline), parse_mode='Markdown')
 
 
+def get_forced_game_status_or_none(status_ref: str):
+    # TODO: fix unsafe calls and test
+    if status_ref.startswith('{'):
+        status_dict = status_ref
+    elif '/' in status_ref:
+        status_dict = requests.get(status_ref).text
+    else:
+        with open(f'test_game_states/{status_ref}') as f:
+            status_dict = f.readline()
+    try:
+        return StatusSchema(partial=True, unknown=EXCLUDE).load(literal_eval(status_dict))
+    except Exception as e:
+        logger.error(f'Failed to parse forced status with ref: {status_ref}')
+        return None
+
+
 @safe_dzzzr_interaction
 async def update_level(message: types.Message, manager: Manager, **kwargs):
     status_ref = utils.trim_command_name(message, kwargs['command_name'])
     if len(status_ref):
-        if status_ref.startswith('{'):
-            status_dict = status_ref
-        elif '/' in status_ref:
-            status_dict = requests.get(status_ref).text
-        else:
-            with open(f'test_game_states/{status_ref}') as f:
-                status_dict = f.readline()
-        try:
-            game_status = StatusSchema(partial=True, unknown=EXCLUDE).load(literal_eval(status_dict))
-        except Exception as e:
+        game_status = get_forced_game_status_or_none(status_ref)
+        if game_status is None:
             game_status = StatusSchema(partial=True, unknown=EXCLUDE).load({})
-            await message.reply('Не удалось распарсить игровой статус: {}'.format(e))
+            await message.reply(f'Не удалось распарсить игровой статус: {status_ref}')
     else:
         game_status = await manager.http_client.status()
     await message.reply(str(game_status))
@@ -339,35 +357,40 @@ async def _update_current_level_info(game_status: Status, manager: Manager, on_u
         logger.error("Bad koline to parse: {}".format(game_status.current_level.koline))
 
 
-async def _update_current_level_info_on_code(verdict: str, message: types.Message, manager: Manager):
-    new_status = await manager.http_client.status()
+async def _update_current_level_info_on_code(verdict: str, message: types.Message, manager: Manager, **kwargs):
+    if 'game_status' in kwargs:
+        new_status = kwargs['game_status']
+    else:
+        new_status = await manager.http_client.status()
     koline = manager.state.koline
     new_koline = model_parsing_utils.parse_koline_from_string(new_status.current_level.koline)
 
     if not koline:
-        logger.error("Koline has not been initialized on level")
+        logger.error('Koline has not been initialized on level')
         manager.state.koline = new_koline
         manager.state.game_status = new_status
         return
     if len(koline.sectors) != len(new_koline.sectors):
-        logger.error("Number of sectors has been changed, probably level has been upped")
+        logger.error('Number of sectors has been changed, probably level has been upped')
+        manager.state.koline = new_koline
+        manager.state.game_status = new_status
         return
+    codes_update = ''
     for old_sector, new_sector in zip(koline.sectors, new_koline.sectors):
         if len(old_sector.codes) != len(new_sector.codes):
-            logger.error("Number of codes for sector: {} is broken".format(new_sector.name))
+            logger.error(f'Number of codes for sector: {new_sector.name} is broken')
             return
         for old_code, new_code in zip(old_sector.codes, new_sector.codes):
             if not old_code.taken and new_code.taken:
-                await message.reply(
-                    "{} таймер: {}, метка: {}, ко: {}".format(
-                        verdict,
-                        datetime.timedelta(seconds=new_status.current_level.tm),
-                        new_code.label + 1,
-                        new_code.ko
-                    )
+                codes_update += code_update_view(
+                    verdict,
+                    new_status.current_level.tm,
+                    new_code.label + 1,
+                    new_code.ko
                 )
     manager.state.koline = new_koline
     manager.state.game_status = new_status
+    return codes_update
 
 
 @safe_dzzzr_interaction
@@ -384,7 +407,7 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
     # To avoid dummy messages to the chats on the bot or game startup
     is_fresh_start = not manager.state.game_status
     if is_fresh_start or manager.state.game_status.current_level.levelNumber != current_level_id:
-        manager.logger.info("New game status from site {} ".format(game_status))
+        manager.logger.info(f'New game status from site {game_status}')
         await _update_current_level_info(game_status, manager, on_up=True)
         return await process_next_level(game_status, manager, silent=is_fresh_start)
     return await _update_current_level_info(game_status, manager, on_up=False)
@@ -401,8 +424,7 @@ async def try_process_coords(message: types.Message, manager: Manager, text: str
             await manager.bot.send_location(message.chat.id, f_lat, f_long,
                                             reply_to_message_id=message.message_id)
         except Exception as e:
-            await message.reply("Не удалось распарсить координаты из: '{}', '{}'"
-                                .format(s_lat, s_long))
+            await message.reply(f'Не удалось распарсить координаты из: \'{s_lat}\', \'{s_long}\'')
 
 
 async def try_process_code(message: types.Message, manager: Manager, text: str):
@@ -449,6 +471,8 @@ async def set_state_key_value(message: types.Message, manager: Manager, **kwargs
         await message.reply(f"Переменной {key} не существует")
     except ValueError:
         await message.reply(f"{value} - недопустимое значение для переменной {key}")
+    except TypeError:
+        await message.reply(f"Не удалось присвоить значение переменной {key}")
 
 
 async def get_all_params(message: types.Message, manager: Manager, **kwargs):

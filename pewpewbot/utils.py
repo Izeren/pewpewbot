@@ -20,7 +20,7 @@ class Modes(Enum):
 
 
 def parse_message_text(message: types.Message) -> str:
-    return message.text if message.text else (message.caption if message.caption else "")
+    return message.text if message.text else (message.caption if message.caption else '')
 
 
 def clean_html_tags(message):
@@ -77,11 +77,6 @@ async def image_to_all_channels(manager: 'Manager', message: types.message, link
         await manager.bot.send_photo(manager.state.code_chat_id, link, message, parse_mode='Markdown')
     if manager.state.main_chat_id:
         await manager.bot.send_photo(manager.state.main_chat_id, link, message, parse_mode='Markdown')
-
-
-async def notify_code_chat(manager: 'Manager', message: types.message):
-    if manager.state.code_chat_id is not None:
-        await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
 
 
 async def notify_debug_chat(manager: 'Manager', message: types.message):

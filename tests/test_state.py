@@ -1,5 +1,5 @@
 import pytest
-from pewpewbot.State import State
+from pewpewbot.state import State
 
 
 def test_setters():

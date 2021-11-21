@@ -1,4 +1,3 @@
-from datetime import datetime
 import json
 import logging
 from pathlib import Path
@@ -17,6 +16,7 @@ class State:
     code_chat_id: str = field(default=None)
     main_chat_id: str = field(default=None)
     debug_chat_id: str = field(default=None)
+    enhanced_code_report: int = field(default=1)
     engine_timeout: int = 30
     screenshot_url: str = field(default=None)
     screenshot_timeout: int = 5
