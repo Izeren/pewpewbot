@@ -1,5 +1,5 @@
 from pewpewbot import commands_processing
-from pewpewbot.TgCommand import TgCommand, TgCommandManager
+from pewpewbot.tg_command import TgCommand, TgCommandManager
 
 COMMAND_MANAGER = TgCommandManager()
 

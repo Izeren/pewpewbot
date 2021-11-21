@@ -1,35 +1,14 @@
 import pytest
 
-from asyncio import Future
 from pytest_mock import MockerFixture
 
-from pewpewbot.State import State
-from pewpewbot.models import Status, LevelStatus
-from pewpewbot.client import Client
-from pewpewbot.manager import Manager
-from pewpewbot.model_parsing_utils import parse_koline_from_string
-
-
-def mock_manager(mocker: MockerFixture):
-    future_status = Future()
-    koline = parse_koline_from_string('')
-    status = mocker.MagicMock(Status)
-    status.current_level = mocker.Mock(LevelStatus)
-    status.current_level.koline = ''
-    future_status.set_result(status)
-    client = mocker.Mock(Client)
-    client.status = mocker.Mock(return_value=future_status)
-    state = State()
-    state.game_status = status
-    manager = Manager(state, client, None, None, None)
-    manager.state.koline = None
-    return koline, manager
+from tests.mock_utils import mock_manager_with_future_koline
 
 
 @pytest.mark.asyncio
-async def test_get_or_load_and_parse_koline(mocker: MockerFixture):
+async def test_get_or_load_and_parse_koline():
     # given
-    koline, manager = mock_manager(mocker)
+    koline, manager = mock_manager_with_future_koline()
 
     # when
     returned_koline = await manager.get_or_load_and_parse_koline()
@@ -41,9 +20,9 @@ async def test_get_or_load_and_parse_koline(mocker: MockerFixture):
 
 
 @pytest.mark.asyncio
-async def test_load_and_parse_koline(mocker: MockerFixture):
+async def test_load_and_parse_koline():
     # given
-    koline, manager = mock_manager(mocker)
+    koline, manager = mock_manager_with_future_koline()
 
     # when
     returned_koline = await manager.load_and_parse_koline()
@@ -55,9 +34,9 @@ async def test_load_and_parse_koline(mocker: MockerFixture):
 
 
 @pytest.mark.asyncio
-async def test_get_or_load_and_parse_koline_not_empty(mocker: MockerFixture):
+async def test_get_or_load_and_parse_koline_not_empty():
     # given
-    koline, manager = mock_manager(mocker)
+    koline, manager = mock_manager_with_future_koline()
     manager.state.koline = koline
 
     # when

@@ -7,7 +7,7 @@ from arsenic import browsers, keys, services, start_session, stop_session
 from arsenic.session import Session
 from structlog.types import WrappedLogger
 
-from pewpewbot.State import State
+from pewpewbot.state import State
 
 # Fix long values in log for screenshot method
 class DictTrimmerProcessor:

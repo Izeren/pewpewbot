@@ -20,7 +20,7 @@ class Modes(Enum):
 
 
 def parse_message_text(message: types.Message) -> str:
-    return message.text if message.text else (message.caption if message.caption else "")
+    return message.text if message.text else (message.caption if message.caption else '')
 
 
 def clean_html_tags(message):

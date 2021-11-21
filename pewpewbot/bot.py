@@ -11,7 +11,7 @@ from aiogram import Dispatcher, executor
 from pewpewbot import utils
 from pewpewbot.client import Client
 from pewpewbot.manager import Manager
-from pewpewbot.State import State
+from pewpewbot.state import State
 from pewpewbot.queue_bot import QueueBot
 
 DUMP_CONFIG_TIMEOUT = 30

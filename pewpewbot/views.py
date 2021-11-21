@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from pewpewbot.State import State
+from pewpewbot.state import State
 from pewpewbot.models import Sector, Koline, CodeVerdict
 from pewpewbot.code_utils import CODE_VERDICT_TO_MESSAGE
 
@@ -53,12 +53,11 @@ def sector_default_ko_message(sector: Sector, state: State, ko_caption: str):
     return result
 
 
-def not_taken_with_tips(sector, tips, state: State):
+def not_taken_with_tips(sector: Sector, tips: list):
     """
     Вьюха списка не взятых KO с подсказками
     """
     result = ""
-
 
     result += "Сектор: *{}*\n".format(sector.name)
     result += "```\n"
@@ -74,15 +73,15 @@ def not_taken_with_tips(sector, tips, state: State):
     return result
 
 
-def not_taken_with_tips_for_sector_list(sectors, state: State, ko_caption: str):
+def not_taken_with_tips_for_sector_list(state: State, ko_caption: str):
     tm = get_tm_safe(state)
     if tm and not ko_caption:
         result = "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
     else:
         result = ko_caption
-    for sector, sector_tip in zip(sectors, state.tip):
+    for sector, sector_tip in zip(state.koline.sectors, state.tip):
         if sector_tip:
-            result += not_taken_with_tips(sector, sector_tip, state) + "\n"
+            result += not_taken_with_tips(sector, sector_tip) + "\n"
         else:
             result += sector_default_ko_message(sector, state, ko_caption) + "\n"
     return result
@@ -106,3 +105,12 @@ def code_verdict_view(verdict_value: CodeVerdict, code: str) -> str:
     :return: Форматированный вердикт для отправленного кода
     """
     return f"{CODE_VERDICT_TO_MESSAGE[verdict_value]}\n*{code}*"
+
+
+def try_send_code_view(code: str):
+    return f'Пытаюсь пробить код: *{code}*'
+
+
+def code_update_view(verdict: str, tm: int, label: int, ko: str):
+    return f'{verdict}\n\u23f0: *{timedelta(seconds=tm)}*, ' + \
+           f'\U0001f3f7: *{label + 1}*, \U0001f47b: *{ko}*\n'

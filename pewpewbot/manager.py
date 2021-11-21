@@ -4,7 +4,7 @@ from logging import Logger
 from aiogram import Bot
 
 from pewpewbot import model_parsing_utils
-from pewpewbot.State import State
+from pewpewbot.state import State
 from pewpewbot.client import Client
 from pewpewbot.screenshot import Screenshoter
 

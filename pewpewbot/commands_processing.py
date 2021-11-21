@@ -13,10 +13,11 @@ from marshmallow import EXCLUDE
 from aiogram import types, Bot
 
 from pewpewbot import model_parsing_utils
-from pewpewbot.models import Status, CodeVerdict, StatusSchema
+from pewpewbot.models import Status, CodeVerdict, StatusSchema, CodeResult
 from pewpewbot import utils, code_utils, patterns, views
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
+from pewpewbot.views import try_send_code_view, code_update_view
 
 logger = logging.getLogger("bot")
 logger.propagate = False
@@ -77,7 +78,7 @@ async def send_ko(message: types.Message, manager: Manager, **kwargs):
                 parse_mode='Markdown')
     else:
         await message.reply(
-            views.not_taken_with_tips_for_sector_list(list_sectors, manager.state, ko_caption),
+            views.not_taken_with_tips_for_sector_list(manager.state, ko_caption),
             parse_mode='Markdown')
 
 
@@ -232,7 +233,7 @@ async def process_code(message: types.Message, manager: Manager, **kwargs):
     code = get_forced_code_text_from_message_or_reply(message)
 
     if manager.state.enhanced_code_report:
-        await message.reply("Пытаюсь пробить код: *{}*".format(code), parse_mode='Markdown')
+        await message.reply(try_send_code_view(code), parse_mode='Markdown')
 
     if 'forced_code_verdict' in kwargs:
         code_result = CodeResult(kwargs['forced_code_verdict'], '')
@@ -365,28 +366,28 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
     new_koline = model_parsing_utils.parse_koline_from_string(new_status.current_level.koline)
 
     if not koline:
-        logger.error("Koline has not been initialized on level")
+        logger.error('Koline has not been initialized on level')
         manager.state.koline = new_koline
         manager.state.game_status = new_status
         return
     if len(koline.sectors) != len(new_koline.sectors):
-        logger.error("Number of sectors has been changed, probably level has been upped")
+        logger.error('Number of sectors has been changed, probably level has been upped')
         manager.state.koline = new_koline
         manager.state.game_status = new_status
         return
     codes_update = ''
     for old_sector, new_sector in zip(koline.sectors, new_koline.sectors):
         if len(old_sector.codes) != len(new_sector.codes):
-            logger.error("Number of codes for sector: {} is broken".format(new_sector.name))
+            logger.error(f'Number of codes for sector: {new_sector.name} is broken')
             return
         for old_code, new_code in zip(old_sector.codes, new_sector.codes):
             if not old_code.taken and new_code.taken:
-                codes_update += "{}\n\u23f0: *{}*, \U0001f3f7: *{}*, \U0001f47b: *{}*\n".format(
-                        verdict,
-                        datetime.timedelta(seconds=new_status.current_level.tm),
-                        new_code.label + 1,
-                        new_code.ko
-                    )
+                codes_update += code_update_view(
+                    verdict,
+                    new_status.current_level.tm,
+                    new_code.label + 1,
+                    new_code.ko
+                )
     manager.state.koline = new_koline
     manager.state.game_status = new_status
     return codes_update
@@ -406,7 +407,7 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
     # To avoid dummy messages to the chats on the bot or game startup
     is_fresh_start = not manager.state.game_status
     if is_fresh_start or manager.state.game_status.current_level.levelNumber != current_level_id:
-        manager.logger.info("New game status from site {} ".format(game_status))
+        manager.logger.info(f'New game status from site {game_status}')
         await _update_current_level_info(game_status, manager, on_up=True)
         return await process_next_level(game_status, manager, silent=is_fresh_start)
     return await _update_current_level_info(game_status, manager, on_up=False)
@@ -423,8 +424,7 @@ async def try_process_coords(message: types.Message, manager: Manager, text: str
             await manager.bot.send_location(message.chat.id, f_lat, f_long,
                                             reply_to_message_id=message.message_id)
         except Exception as e:
-            await message.reply("Не удалось распарсить координаты из: '{}', '{}'"
-                                .format(s_lat, s_long))
+            await message.reply(f'Не удалось распарсить координаты из: \'{s_lat}\', \'{s_long}\'')
 
 
 async def try_process_code(message: types.Message, manager: Manager, text: str):
