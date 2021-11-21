@@ -385,7 +385,7 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
                 codes_update += code_update_view(
                     verdict,
                     new_status.current_level.tm,
-                    new_code.label + 1,
+                    new_code.label,
                     new_code.ko
                 )
     manager.state.koline = new_koline
