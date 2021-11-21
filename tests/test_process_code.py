@@ -4,7 +4,7 @@ import pytest
 from mock import call, Mock
 from pytest_mock import MockerFixture
 
-from tests.mock_utils import mock_message, mock_manager, DR_CODE, KOLINE_UP_1_CODE_LABEL_4, KOLINE_DEFAULT_PARSED, \
+from tests.mock_utils import mock_message, mock_manager, DR_CODE, KOLINE_UP_1_CODE_LABEL_3, KOLINE_DEFAULT_PARSED, \
     mock_status, TM_DEFAULT, KOLINE_DEFAULT, LABEL_UP_DEFAULT, KO_DEFAULT
 from pewpewbot.models import CodeResult, CodeVerdict, Status
 from pewpewbot.commands_processing import process_code
@@ -70,7 +70,7 @@ async def test_code_with_unknown_verdict(mocker: MockerFixture):
 async def test_code_with_forced_verdict(mocker: MockerFixture):
     # given
     old_status = mock_status(KOLINE_DEFAULT, TM_DEFAULT, 1)
-    new_status = mock_status(KOLINE_UP_1_CODE_LABEL_4, TM_DEFAULT, 1)
+    new_status = mock_status(KOLINE_UP_1_CODE_LABEL_3, TM_DEFAULT, 1)
     message_mock, manager_mock, code_verdict, expected_caption = mock_default(old_status, new_status)
     notify_mock = mocker.patch('pewpewbot.utils.notify_all_channels')
     update_level_mock = mocker.patch('pewpewbot.commands_processing.update_level_status')

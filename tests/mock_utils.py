@@ -12,20 +12,21 @@ from pewpewbot.manager import Manager
 
 DR_CODE = 'dr1'
 TM_DEFAULT = 42
-LABEL_UP_DEFAULT = 4
+# Label are counted from zero except the view
+LABEL_UP_DEFAULT = 3
 KO_DEFAULT = '1+'
 UNUSUAL_CODE = 'test_code'
 KOLINE_DEFAULT = " основные коды: <span style='color:red'>1</span>, 2, 2, 1+, <span style='color:red'>1+</span>, " + \
                  "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
                  "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
                  "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
-KOLINE_UP_1_CODE_LABEL_4 = " основные коды: <span style='color:red'>1</span>, 2, 2, " + \
+KOLINE_UP_1_CODE_LABEL_3 = " основные коды: <span style='color:red'>1</span>, 2, 2, " + \
                            "<span style='color:red'>1+</span>, <span style='color:red'>1+</span>, " + \
                            "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
                            "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
                            "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
 KOLINE_DEFAULT_PARSED = parse_koline_from_string(KOLINE_DEFAULT)
-KOLINE_UP_1_CODE_LABEL_4_PARSED = parse_koline_from_string(KOLINE_UP_1_CODE_LABEL_4)
+KOLINE_UP_1_CODE_LABEL_3_PARSED = parse_koline_from_string(KOLINE_UP_1_CODE_LABEL_3)
 
 
 def mock_manager(koline: Koline = None, game_status: Status = None):
