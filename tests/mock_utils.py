@@ -10,21 +10,30 @@ from pewpewbot.state import State
 from pewpewbot.client import Client
 from pewpewbot.manager import Manager
 
+SECTOR_NAME_DEFAULT = 'основные коды'
+SECTOR_NAME_BONUS = 'бонусные коды'
 DR_CODE = 'dr1'
 TM_DEFAULT = 42
 # Label are counted from zero except the view
 LABEL_UP_DEFAULT = 3
 KO_DEFAULT = '1+'
 UNUSUAL_CODE = 'test_code'
-KOLINE_DEFAULT = " основные коды: <span style='color:red'>1</span>, 2, 2, 1+, <span style='color:red'>1+</span>, " + \
-                 "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
-                 "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
+MAIN_SECTOR_DEFAULT = " основные коды: <span style='color:red'>1</span>, 2, 2, 1+, " \
+                      "<span style='color:red'>1+</span>, " \
+                 "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
+                 "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
                  "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
-KOLINE_UP_1_CODE_LABEL_3 = " основные коды: <span style='color:red'>1</span>, 2, 2, " + \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1+</span>, " + \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " + \
+MAIN_SECTOR_UP_1_CODE_LABEL_3 = " основные коды: <span style='color:red'>1</span>, 2, 2, " \
+                           "<span style='color:red'>1+</span>, <span style='color:red'>1+</span>, " \
+                           "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
+                           "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
                            "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
+BONUS_SECTOR_DEFAULT = " бонусные коды: <span style='color:red'>1</span>, 2<br>"
+BONUS_SECTOR_UP_1_CODE_LABEL_1 = " бонусные коды: <span style='color:red'>1</span>, 2<br>"
+KOLINE_DEFAULT = MAIN_SECTOR_DEFAULT
+KOLINE_UP_1_CODE_LABEL_3 = MAIN_SECTOR_UP_1_CODE_LABEL_3
+KOLINE_MULTISECTOR_DEFAULT = MAIN_SECTOR_DEFAULT + BONUS_SECTOR_DEFAULT
+KOLINE_MULTISECTOR_BONUS_CODE_UP = MAIN_SECTOR_DEFAULT + BONUS_SECTOR_UP_1_CODE_LABEL_1
 KOLINE_DEFAULT_PARSED = parse_koline_from_string(KOLINE_DEFAULT)
 KOLINE_UP_1_CODE_LABEL_3_PARSED = parse_koline_from_string(KOLINE_UP_1_CODE_LABEL_3)
 
@@ -84,10 +93,11 @@ def get_pin_message_to_mock_tip_for_manager_with_ko(koline: Koline = None, manag
     koline = manager.state.koline
     if 0 == len(koline.sectors):
         raise Exception("Mocking of tip for empty koline is not supported")
-    first_sector = koline.sectors[0]
-    sector_tips = '\n'.join([f'tip: {code_id}' for code_id in range(len(first_sector.codes))])
-    tip_text = f'/tip 0\n{sector_tips}'
-    message = mock_message(tip_text)
+    tip_text = f'/tip all\n'
+    all_tips = []
+    for sector in koline.sectors:
+        all_tips.append('\n'.join([f'tip: {code_id}' for code_id in range(len(sector.codes))]))
+    message = mock_message(tip_text + '***'.join(all_tips))
     return message
 
 

@@ -4,8 +4,8 @@ import pytest
 from mock import call, Mock
 from pytest_mock import MockerFixture
 
-from tests.mock_utils import mock_message, mock_manager, DR_CODE, KOLINE_UP_1_CODE_LABEL_3, KOLINE_DEFAULT_PARSED, \
-    mock_status, TM_DEFAULT, KOLINE_DEFAULT, LABEL_UP_DEFAULT, KO_DEFAULT
+from tests.mock_utils import mock_message, mock_manager, DR_CODE, KOLINE_UP_1_CODE_LABEL_3, \
+    mock_status, TM_DEFAULT, KOLINE_DEFAULT, LABEL_UP_DEFAULT, KO_DEFAULT, SECTOR_NAME_DEFAULT
 from pewpewbot.models import CodeResult, CodeVerdict, Status
 from pewpewbot.commands_processing import process_code
 from pewpewbot.views import try_send_code_view, code_update_view, code_verdict_view
@@ -26,7 +26,7 @@ def mock_default(old_status: Status = None, new_status: Status = None):
     manager_mock.http_client.post_code = Mock()
     manager_mock.http_client.status = Mock(return_value=future_status)
     verdict_message = code_verdict_view(code_verdict.value, DR_CODE)
-    expected_caption = code_update_view(verdict_message, TM_DEFAULT, LABEL_UP_DEFAULT, KO_DEFAULT)
+    expected_caption = code_update_view(verdict_message, SECTOR_NAME_DEFAULT, TM_DEFAULT, LABEL_UP_DEFAULT, KO_DEFAULT)
     return message_mock, manager_mock, code_verdict, expected_caption
 
 
