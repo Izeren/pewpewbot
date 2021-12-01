@@ -70,16 +70,10 @@ async def parse_coords_to_location(message: types.Message, manager: Manager, **k
 
 async def send_ko(message: types.Message, manager: Manager, **kwargs):
     ko_caption = kwargs['ko_caption'] if 'ko_caption' in kwargs else ''
-    koline = await manager.get_or_load_and_parse_koline()
-    if not manager.state.tip:
-        for sector in koline.sectors:
-            await message.reply(
-                views.sector_default_ko_message(sector, manager.state, ko_caption),
-                parse_mode='Markdown')
-    else:
-        await message.reply(
-            views.not_taken_with_tips_for_sector_list(manager.state, ko_caption),
-            parse_mode='Markdown')
+    await manager.get_or_load_and_parse_koline()
+    await message.reply(
+        views.sector_list_ko_view(manager.state, ko_caption),
+        parse_mode='Markdown')
 
 
 async def process_link(message: types.Message, manager: Manager, **kwargs):
@@ -384,6 +378,7 @@ async def _update_current_level_info_on_code(verdict: str, message: types.Messag
             if not old_code.taken and new_code.taken:
                 codes_update += code_update_view(
                     verdict,
+                    new_sector.name,
                     new_status.current_level.tm,
                     new_code.label,
                     new_code.ko

@@ -12,7 +12,15 @@ def get_tm_safe(state: State):
         return None
 
 
-def sector_default_ko_message(sector: Sector, state: State, ko_caption: str):
+def default_sector_caption(sector_name: str):
+    return f'Название сектора: *{sector_name}*\n'
+
+
+def default_ko_caption(tm: int):
+    return f'Taймер на уровне: *{timedelta(seconds=tm)}*\n'
+
+
+def sector_default_ko_message(sector: Sector):
     """
     Вьюха списка KO в виде текста
     """
@@ -22,15 +30,7 @@ def sector_default_ko_message(sector: Sector, state: State, ko_caption: str):
     cols = 2  # Колонок всегда 2
     pages = size // (rows * cols) + 1  # Кол-во страниц
 
-    tm = get_tm_safe(state)
-    if tm and not ko_caption:
-        result = "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
-    else:
-        result = ko_caption
-    result += "Название сектора: *{}*\n".format(sector.name)
-
-    result += "```\n"
-
+    result = f"{default_sector_caption(sector.name)}```\n"
     for page_index, page in enumerate(range(pages)):  # Номер страницы
         for row_index, row in enumerate(range(rows)):
             for col_index, col in enumerate(range(cols)):
@@ -38,11 +38,7 @@ def sector_default_ko_message(sector: Sector, state: State, ko_caption: str):
                 if code_index >= size:
                     continue
                 code = code_list[code_index]
-                result += "{:<2} {:<3}  {}    ".format(
-                    '{}'.format(code.label + 1),
-                    code.ko.strip(),
-                    'V' if code.taken else ' ',
-                )
+                result += f'{(code.label + 1):<2} {code.ko.strip():<3}\t\t'
             result += '\n'
 
         if page_index != pages - 1:
@@ -53,15 +49,11 @@ def sector_default_ko_message(sector: Sector, state: State, ko_caption: str):
     return result
 
 
-def not_taken_with_tips(sector: Sector, tips: list):
+def sector_with_tips_ko_message(sector: Sector, tips: list):
     """
     Вьюха списка не взятых KO с подсказками
     """
-    result = ""
-
-    result += "Сектор: *{}*\n".format(sector.name)
-    result += "```\n"
-
+    result = f"{default_sector_caption(sector.name)}```\n"
     for code_id, code in enumerate(sector.codes):
         tip = tips[code_id] if code_id < len(tips) else 'Not enough tips provided'
         if code.taken:
@@ -73,17 +65,15 @@ def not_taken_with_tips(sector: Sector, tips: list):
     return result
 
 
-def not_taken_with_tips_for_sector_list(state: State, ko_caption: str):
+def sector_list_ko_view(state: State, ko_caption: str):
     tm = get_tm_safe(state)
-    if tm and not ko_caption:
-        result = "Taймер на уровне: *{}*\n".format(timedelta(seconds=tm))
-    else:
-        result = ko_caption
-    for sector, sector_tip in zip(state.koline.sectors, state.tip):
+    result = default_ko_caption(tm) if tm and not ko_caption else ko_caption
+    sector_tips = state.tip if state.tip else [[] for _ in range(len(state.koline.sectors))]
+    for sector, sector_tip in zip(state.koline.sectors, sector_tips):
         if sector_tip:
-            result += not_taken_with_tips(sector, sector_tip) + "\n"
+            result += sector_with_tips_ko_message(sector, sector_tip) + "\n"
         else:
-            result += sector_default_ko_message(sector, state, ko_caption) + "\n"
+            result += sector_default_ko_message(sector) + "\n"
     return result
 
 
@@ -111,6 +101,6 @@ def try_send_code_view(code: str):
     return f'Пытаюсь пробить код: *{code}*'
 
 
-def code_update_view(verdict: str, tm: int, label: int, ko: str):
-    return f'{verdict}\n\u23f0: *{timedelta(seconds=tm)}*, ' + \
+def code_update_view(verdict: str, sector_name: str, tm: int, label: int, ko: str):
+    return f'{verdict}\nПо сектору: *{sector_name}*\n\u23f0: *{timedelta(seconds=tm)}*, ' + \
            f'\U0001f3f7: *{label + 1}*, \U0001f47b: *{ko}*\n'
