@@ -18,6 +18,7 @@ from pewpewbot import utils, code_utils, patterns, views
 from pewpewbot.errors import AuthenticationError, ConnectionError, ValidationError
 from pewpewbot.manager import Manager
 from pewpewbot.views import try_send_code_view, code_update_view
+from pewpewbot.utils import get_yandex_maps_formated_coords, pretty_format_message_with_coords
 
 logger = logging.getLogger("bot")
 logger.propagate = False
@@ -410,16 +411,12 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):
     coords = re.findall(patterns.STANDARD_COORDS_PATTERN, text)
-    for idx in range(len(coords) // 2):
-        s_lat = coords[2 * idx]
-        s_long = coords[2 * idx + 1]
-        try:
-            f_lat = float(s_lat)
-            f_long = float(s_long)
-            await manager.bot.send_location(message.chat.id, f_lat, f_long,
-                                            reply_to_message_id=message.message_id)
-        except Exception as e:
-            await message.reply(f'Не удалось распарсить координаты из: \'{s_lat}\', \'{s_long}\'')
+    if len(coords) > 2:
+        await message.reply(
+            pretty_format_message_with_coords(message.text),
+            parse_mode='Markdown',
+            disable_web_page_preview=True
+        )
 
 
 async def try_process_code(message: types.Message, manager: Manager, text: str):
