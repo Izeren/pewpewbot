@@ -19,6 +19,12 @@ class Modes(Enum):
     DISABLED = "off"
 
 
+def get_yandex_maps_formated_coords(lat, lon):
+    lat = lat.replace(',', '.')
+    lon = lon.replace(',', '.')
+    return f'[{lat}, {lon}](maps.yandex.ru/?rtext=~{lat},{lon}&rtt=auto)'
+
+
 def parse_message_text(message: types.Message) -> str:
     return message.text if message.text else (message.caption if message.caption else '')
 
@@ -34,7 +40,9 @@ def pretty_format_message_with_coords(message):
     for index in range(len(coord_part_ids) // 2):
         c_start = coord_part_ids[2 * index][0]
         c_end = coord_part_ids[2 * index + 1][1]
-        result += message[start:c_start] + '`' + message[c_start:c_end] + '`'
+        lat = message[c_start:coord_part_ids[2 * index][1]]
+        lon = message[coord_part_ids[2 * index + 1][0]:c_end]
+        result += message[start:c_start] + get_yandex_maps_formated_coords(lat, lon)
         start = c_end
     if start < len(message):
         result += message[start:]
@@ -63,11 +71,26 @@ def parse_bool(value: Any):
 
 async def notify_all_channels(manager: 'Manager', message: types.message):
     if manager.state.debug_chat_id:
-        await manager.bot.send_message(manager.state.debug_chat_id, message, parse_mode='Markdown')
+        await manager.bot.send_message(
+            manager.state.debug_chat_id,
+            message,
+            parse_mode='Markdown',
+            disable_web_page_preview=True
+        )
     if manager.state.code_chat_id:
-        await manager.bot.send_message(manager.state.code_chat_id, message, parse_mode='Markdown')
+        await manager.bot.send_message(
+            manager.state.code_chat_id,
+            message,
+            parse_mode='Markdown',
+            disable_web_page_preview=True
+        )
     if manager.state.main_chat_id:
-        await manager.bot.send_message(manager.state.main_chat_id, message, parse_mode='Markdown')
+        await manager.bot.send_message(
+            manager.state.main_chat_id,
+            message,
+            parse_mode='Markdown',
+            disable_web_page_preview=True
+        )
 
 
 async def image_to_all_channels(manager: 'Manager', message: types.message, link: str):
@@ -121,7 +144,8 @@ def get_schema_urls(level_message):
     links = re.findall(patterns.SCHEMA_LINK_PATTERN, level_message)
     return tuple(DZZZR_UPLOADED_FILES_LINK + link for link in links)
 
-def split_text(text: str, max_length: int=4096) -> List[str]:
+
+def split_text(text: str, max_length: int = 4096) -> List[str]:
     """Splits text by lines. If some line is too long, by spaces
     """
     chunks = text.splitlines(keepends=True)
@@ -130,11 +154,11 @@ def split_text(text: str, max_length: int=4096) -> List[str]:
     while chunks:
         cur_chunk = chunks.pop(0)
         if len(cur_chunk) > max_length:
-            split_chunk = re.split('(\S*\s)', cur_chunk) # Split by whitespace, saving the delimeter
+            split_chunk = re.split('(\S*\s)', cur_chunk)  # Split by whitespace, saving the delimeter
             if len(split_chunk) == 1:
                 # if no spaces, split by length
                 split_chunk = [
-                    cur_chunk[i: i+max_length] 
+                    cur_chunk[i: i + max_length]
                     for i in range(0, len(cur_chunk), max_length)
                 ]
             chunks = split_chunk + chunks

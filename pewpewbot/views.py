@@ -24,29 +24,26 @@ def sector_default_ko_message(sector: Sector):
     """
     Вьюха списка KO в виде текста
     """
+    def get_paged_list(my_list: list, size: int):
+        return [my_list[i:i+size] for i in range(0, len(my_list), size)]
+    page_size = 20
     code_list = list(code for code in sector.codes if not code.taken)
-    size = len(code_list)
-    rows = 5 if size <= 10 else 10  # Сколько элементов в колонке.
-    cols = 2  # Колонок всегда 2
-    pages = size // (rows * cols) + 1  # Кол-во страниц
+    pages = get_paged_list(code_list, page_size)
 
     result = f"{default_sector_caption(sector.name)}```\n"
-    for page_index, page in enumerate(range(pages)):  # Номер страницы
-        for row_index, row in enumerate(range(rows)):
-            for col_index, col in enumerate(range(cols)):
-                code_index = page * rows * cols + rows * col + row
-                if code_index >= size:
-                    continue
-                code = code_list[code_index]
-                result += f'{(code.label + 1):<2} {code.ko.strip():<3}\t\t'
-            result += '\n'
 
-        if page_index != pages - 1:
-            result += '\n\n'
+    page_results = []
+    for page in pages:
+        page_result = ''
+        height = len(page) // 2 if len(page) > 10 else len(page)
+        for row_id in range(height):
+            page_result += f'{(page[row_id].label + 1):<2} {page[row_id].ko.strip():<3}\t\t'
+            if row_id + height < len(page):
+                page_result += f'{(page[row_id + height].label + 1):<2} {page[row_id + height].ko.strip():<3}\t\t'
+            page_result += '\n'
+        page_results.append(page_result)
 
-    result += "```"
-
-    return result
+    return result + '\n\n'.join(page_results) + "```"
 
 
 def sector_with_tips_ko_message(sector: Sector, tips: list):
