@@ -411,7 +411,7 @@ async def update_level_status(bot: Bot, manager: Manager, **kwargs):
 
 async def try_process_coords(message: types.Message, manager: Manager, text: str):
     coords = re.findall(patterns.STANDARD_COORDS_PATTERN, text)
-    if len(coords) > 2:
+    if len(coords) > 1:
         await message.reply(
             pretty_format_message_with_coords(message.text),
             parse_mode='Markdown',
