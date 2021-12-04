@@ -22,7 +22,7 @@ class Modes(Enum):
 def get_yandex_maps_formated_coords(lat, lon):
     lat = lat.replace(',', '.')
     lon = lon.replace(',', '.')
-    return f'[{lat}, {lon}](maps.yandex.ru/?rtext=~{lat},{lon}&rtt=auto)'
+    return f'`{lat}, {lon}`: [ya.maps](maps.yandex.ru/?rtext=~{lat},{lon}&rtt=auto)'
 
 
 def parse_message_text(message: types.Message) -> str:
