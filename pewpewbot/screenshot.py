@@ -65,9 +65,12 @@ class Screenshoter:
             await self.session.get(self.url)
             if "docs.google.com" in self.url:
                 await self.hide_topbar_gdocs()
-                close_pop_up = await session.get_element('.waffle-chip-walkthrough-promo-close')
-                if close_pop_up is not None:
-                    await close_pop_up.click()
+                try:
+	                close_pop_up = await self.session.get_element('.waffle-chip-walkthrough-promo-close')
+	                await close_pop_up.click()
+                except Exception as e:
+                    # ignoring NoSuchElementExceptions if element is already deleted
+                    pass
             logging.info(f"Updated url to {self.url}")
 
         # Update page size
