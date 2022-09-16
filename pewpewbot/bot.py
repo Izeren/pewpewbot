@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 import logging
 import pathlib
@@ -17,6 +18,7 @@ from pewpewbot.queue_bot import QueueBot
 DUMP_CONFIG_TIMEOUT = 30
 
 # Configure logging
+sys.stdout.reconfigure(encoding='utf-8')
 config.fileConfig(path.join(path.dirname(path.abspath(__file__)), 'logging.ini'))
 logger = logging.getLogger(__name__)
 logger.propagate = False

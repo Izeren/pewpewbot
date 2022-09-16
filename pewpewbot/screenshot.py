@@ -47,15 +47,17 @@ class Screenshoter:
             self.loop = asyncio.get_event_loop()
         else:
             self.loop = loop
-        service = services.Chromedriver()
-        browser = browsers.Chrome(
+        # service = services.Chromedriver()
+        service = services.Geckodriver(binary='geckodriver.exe')
+        browser = browsers.Firefox()
+        '''browser = browsers.Chrome(
             **{
                 "goog:chromeOptions": {
                     "args": ["--headless", "--no-sandbox", "--disable-dev-shm-usage"],
                     "w3c": True,
                 }
             }
-        )
+        )'''
         self.session: Session = loop.run_until_complete(start_session(service, browser))
 
     async def sync_with_state(self, state: State):
