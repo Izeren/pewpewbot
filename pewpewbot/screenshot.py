@@ -51,7 +51,7 @@ class Screenshoter:
         browser = browsers.Chrome(
             **{
                 "goog:chromeOptions": {
-                    "args": ["--headless", "--no-sandbox", "--disable-dev-shm-usage"],
+                    "args": ["--headless", "--no-sandbox", "--disable-dev-shm-usage", "--incognito"],
                     "w3c": True,
                 }
             }
