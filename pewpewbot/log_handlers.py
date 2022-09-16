@@ -9,4 +9,4 @@ class FileHandler(logging.FileHandler):
             filepath = "/logs/pew_{}.log".format(level)
         else:
             filepath += level + '.log'
-        super().__init__(filepath)
+        super().__init__(filepath, encoding='utf-8')
