@@ -6,3 +6,7 @@ decorator==5.0.9
 python-json-logger==2.0.1
 arsenic==20.9
 requests==2.25.1
+pytest
+mock
+pytest_mock
+pytest_asyncio

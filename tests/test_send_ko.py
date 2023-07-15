@@ -4,7 +4,7 @@ import pytest
 from mock import Mock, call
 from pytest_mock import MockerFixture
 
-from model_parsing_utils import parse_koline_from_string
+from pewpewbot.model_parsing_utils import parse_koline_from_string
 from pewpewbot.commands_processing import send_ko, process_tip
 from tests.mock_utils import mock_manager, get_pin_message_to_mock_tip_for_manager_with_ko, mock_message, \
     KOLINE_DEFAULT_PARSED, KOLINE_MULTISECTOR_BONUS_CODE_UP

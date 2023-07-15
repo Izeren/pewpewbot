@@ -300,6 +300,7 @@ async def update_level(message: types.Message, manager: Manager, **kwargs):
 async def process_next_level(status, manager: Manager, silent):
     manager.state.reset('code_pattern')
     manager.state.reset('tip')
+    manager.state.reset('codes_to_up')
     if silent:
         return
     await utils.notify_all_channels(manager, "Выдан новый уровень")
@@ -348,6 +349,8 @@ async def _update_current_level_info(game_status: Status, manager: Manager, on_u
         return
     try:
         manager.state.koline = model_parsing_utils.parse_koline_from_string(game_status.current_level.koline)
+        if len(manager.state.koline.sectors) == 1:
+            manager.state.codes_to_up = model_parsing_utils.parse_codes_to_up(game_status.current_level.question)
     except Exception as e:
         logger.error("Bad koline to parse: {}".format(game_status.current_level.koline))
 
@@ -489,3 +492,7 @@ async def reset_to_default(message: types.Message, manager: Manager, **kwargs):
     else:
         manager.state.reset_all()
         await message.reply("Выполнен сброс к заводским настройкам")
+
+# Sets number of codes left before level up
+def process_codes_left():
+    return None

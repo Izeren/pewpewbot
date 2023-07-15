@@ -73,6 +73,16 @@ COMMAND_MANAGER.add_commands(
         enabled=True,
     ),
     TgCommand(
+        names="codes_left",
+        help_text="""
+        /codes_left - Позволяет явно указать количество кодов до взятия, в случае если автоматический парсер не
+        сработал. Заданное значение будет сброшено при переходе на следующий уровень. 
+        Пример использования: "/codes_left 5
+        """,
+        awaitable_action_method=commands_processing.process_codes_left,
+        enabled=True,
+    ),
+    TgCommand(
         names="get_chat_id",
         help_text="""
         /get_chat_id - возвращает айди чата из которого был запрос к боту, нужно, чтобы пинить чаты, в которые бот будет

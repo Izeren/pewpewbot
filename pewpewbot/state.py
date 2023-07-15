@@ -12,6 +12,7 @@ class State:
     type_on: bool = False
     maps_on: bool = True
     tip: list = field(default_factory=list)  # Should be list[list[str]]
+    codes_to_up: int = field(default=-1) # -1 means the value is not set
     link: str = "http://classic.dzzzr.ru/moscow/go/"
     code_chat_id: str = field(default=None)
     main_chat_id: str = field(default=None)
@@ -27,8 +28,10 @@ class State:
     koline: Koline = field(default=None)
 
     async def dump_params(
-            self, file_path: Path, ignore_fields: list = ["game_status", "koline"]
+            self, file_path: Path, ignore_fields=None
     ):
+        if ignore_fields is None:
+            ignore_fields = ["game_status", "koline"]
         params_dict = asdict(self)
         for key in ignore_fields:
             params_dict.pop(key, None)
@@ -82,6 +85,9 @@ class State:
 
     def set_tip_for_sector(self, sector_tip, sector_id):
         self.tip[sector_id] = [tip for tip in [raw_tip.strip() for raw_tip in sector_tip.split("\n")] if len(tip)]
+
+    def set_codes_left_until_level_up(self, codes_to_up):
+        self.codes_to_up = codes_to_up
 
     def __setattr__(self, name, value):
         if name not in self.__dataclass_fields__:

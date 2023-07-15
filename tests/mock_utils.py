@@ -18,16 +18,19 @@ TM_DEFAULT = 42
 LABEL_UP_DEFAULT = 3
 KO_DEFAULT = '1+'
 UNUSUAL_CODE = 'test_code'
+TEST_LEVEL_QUESTION = "<span>На локации вас ожидает 26 кодов. 13 верных, 13 штрафных (1 мин штрафа)." \
+                      "Для прохождения нужно найти 12 верных кодов.</span></p>" \
+                      "\r\n<p> </p>\r\n<p> </p>\r\n<p>МЕТКА НА УРОВНЕ:"
 MAIN_SECTOR_DEFAULT = " основные коды: <span style='color:red'>1</span>, 2, 2, 1+, " \
                       "<span style='color:red'>1+</span>, " \
-                 "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
-                 "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
-                 "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
+                      "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
+                      "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
+                      "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
 MAIN_SECTOR_UP_1_CODE_LABEL_3 = " основные коды: <span style='color:red'>1</span>, 2, 2, " \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1+</span>, " \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
-                           "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
+                                "<span style='color:red'>1+</span>, <span style='color:red'>1+</span>, " \
+                                "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
+                                "<span style='color:red'>1+</span>, <span style='color:red'>1</span>, 1+, " \
+                                "<span style='color:red'>1+</span>, <span style='color:red'>1+</span><br>"
 BONUS_SECTOR_DEFAULT = " бонусные коды: <span style='color:red'>1</span>, 2<br>"
 BONUS_SECTOR_UP_1_CODE_LABEL_1 = " бонусные коды: <span style='color:red'>1</span>, 2<br>"
 KOLINE_DEFAULT = MAIN_SECTOR_DEFAULT
@@ -46,6 +49,9 @@ def mock_manager(koline: Koline = None, game_status: Status = None):
         state.game_status = game_status
     elif koline:
         state.koline = koline
+        state.game_status = Status()
+        state.game_status.current_level = LevelStatus()
+        state.game_status.current_level.question = TEST_LEVEL_QUESTION
     logger_mock = Mock(Logger)
     return Manager(state, client, None, None, logger_mock)
 
@@ -102,6 +108,15 @@ def get_pin_message_to_mock_tip_for_manager_with_ko(koline: Koline = None, manag
 
 
 def mock_status(koline: str = None, tm: int = None, levelNumber: int = None):
+    """Mocks game status for testing purposes.
+
+    :param koline: Koline in string representation
+    :param tm: TM value
+    :param levelNumber: Level number
+    :return: Mocked game status object.
+
+    Example:
+    """
     status_mock = Mock(Status)
     status_mock.current_level.koline = koline if koline else KOLINE_DEFAULT
     status_mock.current_level.tm = tm if tm else TM_DEFAULT
